@@ -15,6 +15,7 @@ class HomeSectionController{
   }
 
   public function createBanner (Request $request){
+
     if ($request->hasFile('banner_url')){
       $banner =  $this->convertToWebp($request->file('banner_url'));
 
@@ -31,9 +32,11 @@ class HomeSectionController{
     else{
       return response()->json("Gambar Harus Diunggah!", 400);
     }
+
   }
 
   public function updateBanner (Request $request, int $id){
+
     if ($request->hasfile('banner_url')){
       $banner = $this->convertToWebp($request->file('banner_url'));
 
@@ -46,10 +49,12 @@ class HomeSectionController{
     else{
       return response()->json("Gambar Harus Diunggah!", 400);
     }
+
   }
 
   public function deleteBanner (int $id){
     $deleteBanner = DB::table('home_section')->where('id', $id)->delete();
     return response()->json(['message' => "Banner Berhasil Dihapus!", $deleteBanner],200);
   }
+
 }

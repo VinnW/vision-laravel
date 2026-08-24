@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 class AdminLoginController{
   
   public function login(Request $request){
+    
     $username = $request->input('username', $request->query('username'));
     $password = $request->input('password', $request->query('password'));
 
