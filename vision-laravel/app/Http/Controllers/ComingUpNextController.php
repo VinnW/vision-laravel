@@ -37,6 +37,7 @@ class ComingUpNextController{
   }
 
   public function updateContent(Request $request){
+    
     $image = $this->convertToWebp($request->file('image_url'));
     $desc = $request->input('description');
 
