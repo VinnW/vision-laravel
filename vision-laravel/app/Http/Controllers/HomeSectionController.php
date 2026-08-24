@@ -50,6 +50,6 @@ class HomeSectionController{
 
   public function deleteBanner (int $id){
     $deleteBanner = DB::table('home_section')->where('id', $id)->delete();
-    return response()->json(['message' => "Banner Berhasil Dihapus!"],200);
+    return response()->json(['message' => "Banner Berhasil Dihapus!", $deleteBanner],200);
   }
 }
