@@ -38,17 +38,12 @@ class ComingUpNextController{
 
   public function updateContent(Request $request){
     
-    $image = $this->convertToWebp($request->file('image_url'));
-    $desc = $request->input('description');
-
-    if(!$image && !$desc){
-      return response()->json(['message' => "Gambar atau Deskripsi harus Diubah!"], 400);
-    }
-
-    if($image){
+    if($request->hasFile('image_url')){
+      $image = $this->convertToWebp($request->file('image_url'));
       DB::table('coming_up_next_section')->update(['image_url' => $image]);
     }
-    if($desc){
+    if($request->filled('description')){
+      $desc = $request->input('description');
       DB::table('coming_up_next_section')->update(['description' => $desc]);
     }
     return response()->json(['message' => "Konten Berhasil Diubah!"], 200);
