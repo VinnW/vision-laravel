@@ -38,7 +38,7 @@
                     class="group relative text-[13px] font-semibold uppercase tracking-wide text-slate-600 transition-colors hover:text-slate-900"
                 >
                     {{ $item['label'] }}
-                    <span class="absolute -bottom-1.5 left-0 h-[2px] w-0 bg-[#F2A93B] transition-all duration-300 ease-out group-hover:w-full"></span>
+                    <span class="absolute -bottom-1.5 left-0 h-0.5 w-0 bg-[#F2A93B] transition-all duration-300 ease-out group-hover:w-full"></span>
                 </a>
             @endforeach
         </nav>
