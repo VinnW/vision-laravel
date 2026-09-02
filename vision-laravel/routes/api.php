@@ -6,13 +6,19 @@ use App\Http\Controllers\{
     AdminLoginController,
     ComingUpNextController,
     VisionUpdateController,
-    EventsController
+    EventsController,
+    AgentPageEditController,
+    AgentLoginController
 };
 
 Route::prefix('visionasurance')->group(function() {
 
     Route::controller(AdminLoginController::class)->group(function() {
         Route::match(['get', 'post'], '/login', 'login');
+    });
+
+    Route::controller(AgentLoginController::class)->group(function() {
+        Route::match(['get', 'post'], '/agent-login', 'login');
     });
 
     Route::controller(HomeSectionController::class)->group(function() {
@@ -41,6 +47,12 @@ Route::prefix('visionasurance')->group(function() {
         Route::get('/event', 'getEvent');
         Route::post('/create-event', 'createEvent');
         Route::post('/update-event', 'updateEvent');
+    });
+
+    Route::controller(AgentPageEditController::class)->group(function() {
+        Route::get('/agent/{username}', 'getAgent');
+        Route::put('/agent-edit/{username}', 'editAgent');
+        Route::delete('/agent-delete/{username]', 'deleteAgent');
     });
 
 });
