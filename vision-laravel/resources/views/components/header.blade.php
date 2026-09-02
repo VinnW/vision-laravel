@@ -1,10 +1,3 @@
-{{--
-    Header / Navigation
-    - Sticky, glass-blur background so content scrolls beneath it seamlessly
-    - Tailwind CSS + Alpine.js (mobile menu + language dropdown)
-    - Expects Tailwind theme tokens (see note at bottom of this file) but falls
-      back to arbitrary values so it still works if you haven't added them yet.
---}}
 <header
     x-data="{ mobileOpen: false, langOpen: false }"
     @keydown.escape.window="mobileOpen = false; langOpen = false"

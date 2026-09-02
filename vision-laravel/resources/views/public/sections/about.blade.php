@@ -1,13 +1,3 @@
-{{--
-    About / Company Profile Article
-    - Two-column layout: soft gradient image panel on the left, article copy +
-      social links on the right — mirrors the wireframe, restyled to match
-      header.blade.php / hero.blade.php (mesh-gradient, rounded panel, amber
-      + indigo accents).
-    - Tailwind CSS. $image and $paragraphs are optional and come from the
-      controller; sensible fallbacks are provided so the section still
-      renders standalone.
---}}
 @php
     $image ??= null;
 

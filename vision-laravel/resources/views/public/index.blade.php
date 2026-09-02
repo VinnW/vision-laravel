@@ -5,5 +5,8 @@
         @include('public.sections.hero')
         @include('public.sections.about')
         @include('public.sections.products')
+        @include('public.sections.service')
+        @include('public.sections.event')
+        @include('public.sections.contact')
     </div>
 @endsection

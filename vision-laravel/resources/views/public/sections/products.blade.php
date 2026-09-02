@@ -1,16 +1,20 @@
 {{--
     Products / Layanan Section
-    - "Coverflow" style image slider: 5 panels visible, panel tengah lebih
-      besar & terangkat, sisanya mengecil ke tepi — sesuai wireframe.
+    - "Coverflow" style slider: 5 panel terlihat, panel tengah lebih besar &
+      terangkat, sisanya mengecil ke tepi — sesuai wireframe.
     - Tailwind CSS + Alpine.js untuk state slide aktif & navigasi prev/next.
-    - $products dikirim dari controller (name, description, image, link);
-      dummy image pakai picsum.photos sampai asset asli tersedia.
+    - Ukuran tiap panel di-set lewat :style (inline CSS), BUKAN lewat class
+      Tailwind yang dirakit di JS — supaya tidak bergantung pada bagaimana
+      Tailwind men-scan class dinamis (rawan tidak ter-generate).
+    - $products dikirim dari controller (name, description, image, link).
+      'image' opsional — kalau kosong akan tampil sebagai blok placeholder
+      abu-abu (tanpa perlu koneksi internet), persis seperti wireframe.
 --}}
 @php
     $products ??= collect(range(1, 7))->map(fn ($i) => [
         'name'        => "Nama Produk Layanan {$i}",
         'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
-        'image'       => "https://picsum.photos/seed/vision-produk-{$i}/600/800",
+        'image'       => null,
         'link'        => '#',
     ])->all();
 @endphp
@@ -23,11 +27,12 @@
         prev() { this.active = (this.active - 1 + this.total) % this.total },
         next() { this.active = (this.active + 1) % this.total },
         slot(offset) { return this.items[(this.active + offset + this.total) % this.total] },
-        panelClass(offset) {
+        panelStyle(offset) {
             const abs = Math.abs(offset);
-            if (abs === 0) return 'h-136 w-52 sm:w-64 md:w-72 opacity-100 shadow-2xl shadow-slate-900/20 z-20 rounded-[2rem]';
-            if (abs === 1) return 'h-120 w-44 sm:w-52 md:w-60 opacity-90 z-10 rounded-3xl';
-            return 'h-108 w-36 sm:w-44 md:w-48 opacity-60 rounded-3xl';
+            const size = abs === 0 ? { w: 288, h: 544 } : abs === 1 ? { w: 240, h: 480 } : { w: 192, h: 432 };
+            const opacity = abs === 0 ? 1 : abs === 1 ? 0.9 : 0.6;
+            const z = abs === 0 ? 20 : abs === 1 ? 10 : 0;
+            return `width:${size.w}px; height:${size.h}px; opacity:${opacity}; z-index:${z};`;
         },
     }"
     class="relative overflow-hidden bg-white py-20 lg:py-28"
@@ -46,15 +51,30 @@
                 <button
                     type="button"
                     @click="active = (active + offset + total) % total"
-                    class="group relative shrink-0 overflow-hidden bg-slate-200 transition-all duration-500 ease-out"
-                    :class="panelClass(offset)"
+                    :style="panelStyle(offset)"
+                    class="group relative shrink-0 overflow-hidden rounded-[2rem] bg-slate-200 shadow-2xl shadow-slate-900/20 transition-all duration-500 ease-out"
                     :aria-label="slot(offset).name"
                 >
-                    <img
-                        :src="slot(offset).image"
-                        :alt="slot(offset).name"
-                        class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    />
+                    {{-- Real image, kalau tersedia --}}
+                    <template x-if="slot(offset).image">
+                        <img
+                            :src="slot(offset).image"
+                            :alt="slot(offset).name"
+                            class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        />
+                    </template>
+
+                    {{-- Placeholder abu-abu, dummy, tanpa perlu internet --}}
+                    <template x-if="!slot(offset).image">
+                        <div class="flex h-full w-full items-center justify-center bg-slate-200">
+                            <svg class="h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="m21 15-5-5-9 9" />
+                            </svg>
+                        </div>
+                    </template>
+
                     <div
                         class="pointer-events-none absolute inset-0 bg-slate-900/0 transition-colors duration-300"
                         :class="offset === 0 ? '' : 'group-hover:bg-slate-900/10'"
