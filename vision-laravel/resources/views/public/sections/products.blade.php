@@ -35,7 +35,7 @@
             return `width:${size.w}px; height:${size.h}px; opacity:${opacity}; z-index:${z};`;
         },
     }"
-    class="relative overflow-hidden bg-white py-20 lg:py-28"
+    id="products" class="relative overflow-hidden bg-white py-20 lg:py-28"
 >
     {{-- Decorative mesh-gradient orbs, kept subtle so it doesn't compete with the images --}}
     <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">

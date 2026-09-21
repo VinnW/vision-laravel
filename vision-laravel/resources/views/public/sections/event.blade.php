@@ -29,7 +29,7 @@
     ];
 @endphp
 
-<section class="grid grid-cols-1 lg:grid-cols-2">
+<section id="event" Class="grid grid-cols-1 lg:grid-cols-2">
     @foreach ($columns as $column)
         @php
             $isDark = ($column['tone'] ?? 'dark') === 'dark';

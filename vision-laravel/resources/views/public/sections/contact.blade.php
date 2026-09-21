@@ -12,7 +12,7 @@
     $person_image ??= null;
 @endphp
 
-<section class="bg-white py-16 lg:py-24">
+<section id="contact" class="bg-white py-16 lg:py-24">
     <div class="container mx-auto px-4">
         <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
 

@@ -27,5 +27,5 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::get('/login', function () {
-    return view('auth.login');
+    return view('admin.login');
 })->name('login');

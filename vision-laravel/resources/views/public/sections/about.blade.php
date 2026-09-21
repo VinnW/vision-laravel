@@ -16,7 +16,7 @@
     ];
 @endphp
 
-<section class="relative overflow-hidden bg-slate-50 py-20 lg:py-28">
+<section id="about" class="relative overflow-hidden bg-slate-50 py-20 lg:py-28">
 
     {{-- Decorative mesh-gradient orbs, consistent with the hero section --}}
     <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">

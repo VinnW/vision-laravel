@@ -16,24 +16,24 @@
         {{-- Desktop nav --}}
         <nav class="hidden items-center gap-9 lg:flex">
             @php
-                $navItems = [
-                    ['label' => 'About Us', 'route' => 'about'],
-                    ['label' => 'Products', 'route' => 'products'],
-                    ['label' => 'Service', 'route' => 'service'],
-                    ['label' => 'Event', 'route' => 'event'],
-                    ['label' => 'Contact Us', 'route' => 'contact'],
-                ];
-            @endphp
+    $navItems = [
+        ['label' => 'About Us', 'section' => 'about'],
+        ['label' => 'Products', 'section' => 'products'],
+        ['label' => 'Service', 'section' => 'service'],
+        ['label' => 'Event', 'section' => 'event'],
+        ['label' => 'Contact Us', 'section' => 'contact'],
+    ];
+@endphp
 
             @foreach ($navItems as $item)
-                <a
-                    href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}"
-                    class="group relative text-[13px] font-semibold uppercase tracking-wide text-slate-600 transition-colors hover:text-slate-900"
-                >
-                    {{ $item['label'] }}
-                    <span class="absolute -bottom-1.5 left-0 h-0.5 w-0 bg-[#F2A93B] transition-all duration-300 ease-out group-hover:w-full"></span>
-                </a>
-            @endforeach
+    <a
+        href="#{{ $item['section'] }}"
+        class="group relative text-[13px] font-semibold uppercase tracking-wide text-slate-600 transition-colors hover:text-slate-900"
+    >
+        {{ $item['label'] }}
+        <span class="absolute -bottom-1.5 left-0 h-0.5 w-0 bg-[#F2A93B] transition-all duration-300 ease-out group-hover:w-full"></span>
+    </a>
+@endforeach
         </nav>
 
         {{-- Right actions --}}
@@ -116,14 +116,15 @@
         style="display: none;"
     >
         <nav class="flex flex-col gap-1 px-6 py-4">
-            @foreach ($navItems as $item)
-                <a
-                    href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}"
-                    class="rounded-xl px-3 py-2.5 text-sm font-semibold uppercase tracking-wide text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                >
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
+           @foreach ($navItems as $item)
+    <a
+        href="#{{ $item['section'] }}"
+        @click="mobileOpen = false"
+        class="rounded-xl px-3 py-2.5 text-sm font-semibold uppercase tracking-wide text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+    >
+        {{ $item['label'] }}
+    </a>
+@endforeach
 
             <div class="mt-3 flex items-center gap-3 border-t border-slate-200/70 pt-4">
                 <a href="{{ route('login') }}" class="flex-1 rounded-full bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white">

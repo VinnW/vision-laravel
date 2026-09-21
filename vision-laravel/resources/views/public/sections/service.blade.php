@@ -1,16 +1,3 @@
-{{--
-    Service Section
-    - Blok atas: icon + "Visual Image Desain / Our Service" (kiri) + 2 paragraf
-      intro (kanan) — full-bleed, tanpa rounded corner, sesuai wireframe.
-    - Blok bawah: grid 2 kolom full-bleed, bergantian tone gelap/terang, tiap
-      kolom = "gambar yang ditimpa tulisan" (background image + overlay warna
-      + konten di atasnya). Salah satu kolom punya CTA yang membuka modal
-      kalkulator sederhana.
-    - Tailwind CSS + Alpine.js. $intro, $services dikirim dari controller;
-      fallback disediakan agar section tetap tampil standalone.
-    - 'image' di tiap service opsional — kalau kosong akan tampil sebagai
-      blok warna polos (tanpa dependensi internet), bukan foto asli.
---}}
 @php
     $intro ??= [
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
@@ -45,7 +32,7 @@
 <div x-data="{ calculatorOpen: false, nilai: 100000000, durasi: 10, get estimasi() { return this.durasi > 0 ? Math.round((this.nilai * 0.012 * this.durasi)) : 0 } }">
 
     {{-- ============ Top intro block ============ --}}
-    <section class="relative overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-indigo-50 py-20 lg:py-28">
+    <section id="service" class="relative overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-indigo-50 py-20 lg:py-28">
         <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div class="absolute -left-24 top-1/3 h-96 w-96 rounded-full bg-indigo-200/25 blur-3xl"></div>
             <div class="absolute -right-20 -bottom-16 h-80 w-80 rounded-full bg-[#F2A93B]/15 blur-3xl"></div>
