@@ -41,7 +41,7 @@
 
             {{-- Login --}}
             <a
-                href="{{ route('login') }}"
+                href="{{ route('admin.login.page') }}"
                 class="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-100"
             >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -127,7 +127,7 @@
 @endforeach
 
             <div class="mt-3 flex items-center gap-3 border-t border-slate-200/70 pt-4">
-                <a href="{{ route('login') }}" class="flex-1 rounded-full bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white">
+                <a href="{{ route('admin.login.page') }}" class="flex-1 rounded-full bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white">
                     Login
                 </a>
                 <button type="button" class="flex-1 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700">

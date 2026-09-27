@@ -13,6 +13,10 @@ class Admin extends Authenticatable
 
     protected $primaryKey = 'id';
 
+    public $incrementing = true;
+
+    protected $keyType = 'int';
+
     public $timestamps = false;
 
     protected $fillable = [

@@ -71,16 +71,18 @@ function loginForm() {
             this.error = '';
             this.loading = true;
             try {
-                const res = await fetch('{{ url('visionasurance/login') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({ username: this.username, password: this.password }),
-                });
-                const data = await res.json().catch(() => ({}));
+                const res = await fetch('{{ route('admin.login') }}', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+    },
+    body: JSON.stringify({
+        username: this.username,
+        password: this.password
+    }),
+});
 
                 if (!res.ok) {
                     this.error = data.message || 'Login gagal.';
@@ -88,7 +90,7 @@ function loginForm() {
                 }
 
                 sessionStorage.setItem('admin_user', this.username);
-                window.location.href = '{{ url('visionasurance/dashboard') }}';
+                window.location.href = '{{ route('admin.dashboard') }}';
             } catch (e) {
                 this.error = 'Tidak dapat terhubung ke server.';
             } finally {
