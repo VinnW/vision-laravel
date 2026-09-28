@@ -9,7 +9,20 @@
 </head>
 <body class="min-h-screen bg-slate-50 antialiased">
 
-<div x-data="{ sidebar: false }" class="flex min-h-screen">
+<div
+    x-data="adminShell()"
+    x-on:switch-panel.window="go($event.detail)"
+    class="flex min-h-screen"
+>
+
+    {{-- Overlay (mobile) --}}
+    <div
+        x-show="sidebar"
+        x-cloak
+        x-transition.opacity
+        @click="sidebar = false"
+        class="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+    ></div>
 
     {{-- Sidebar --}}
     <aside
@@ -28,7 +41,7 @@
         @php
             $nav = [
                 ['label' => 'Home Panel',  'panel' => 'home',  'active' => true],
-                ['label' => 'Event Panel', 'panel' => 'event', 'active' => false],
+                ['label' => 'Event Panel', 'panel' => 'event', 'active' => true],
                 ['label' => 'User Panel',  'panel' => 'user',  'active' => false],
             ];
         @endphp
@@ -70,7 +83,7 @@
                     <path d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
-            <h1 class="text-base font-bold text-slate-800">@yield('title', 'Dashboard')</h1>
+            <h1 class="text-base font-bold text-slate-800" x-text="titles[panel]">@yield('title', 'Dashboard')</h1>
         </header>
 
         <main class="p-6 lg:p-10">
@@ -78,5 +91,52 @@
         </main>
     </div>
 </div>
+
+<script>
+function adminShell() {
+
+    const KEY = 'admin.panel';
+
+    const titles = {
+        home:  'Home Panel',
+        event: 'Event Panel',
+        user:  'User Panel'
+    };
+
+    let saved = 'home';
+
+    try {
+        const s = localStorage.getItem(KEY);
+        if (s && titles[s]) {
+            saved = s;
+        }
+    } catch (e) {}
+
+    return {
+
+        sidebar: false,
+        panel: saved,
+        titles: titles,
+
+        go(name) {
+
+            if (!titles[name]) {
+                return;
+            }
+
+            this.panel = name;
+            this.sidebar = false;
+
+            try {
+                localStorage.setItem(KEY, name);
+            } catch (e) {}
+
+            window.scrollTo({ top: 0 });
+        }
+
+    };
+}
+</script>
+
 </body>
 </html>
