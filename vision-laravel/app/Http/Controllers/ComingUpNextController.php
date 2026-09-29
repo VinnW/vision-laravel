@@ -12,25 +12,8 @@ class ComingUpNextController
 
     private const TABLE = 'coming_up_next_section';
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET CONTENT
-    |--------------------------------------------------------------------------
-    */
-
     public function getContent()
     {
-        /*
-         * Karena Coming Up Next hanya mempunyai
-         * satu konten, kita cukup mengambil satu row.
-         *
-         * Kalau tabel kosong:
-         * hasil = null
-         *
-         * Kalau sudah ada:
-         * hasil = object
-         */
 
         $content = DB::table(self::TABLE)
             ->first();
@@ -42,18 +25,8 @@ class ComingUpNextController
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE CONTENT
-    |--------------------------------------------------------------------------
-    */
-
     public function createContent(Request $request)
     {
-        /*
-         * Jangan izinkan membuat konten kedua.
-         */
 
         if (DB::table(self::TABLE)->exists()) {
 
@@ -63,11 +36,6 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Gambar wajib untuk konten baru.
-         */
-
         if (!$request->hasFile('image_url')) {
 
             return response()->json([
@@ -75,11 +43,6 @@ class ComingUpNextController
             ], 400);
 
         }
-
-
-        /*
-         * Title wajib.
-         */
 
         if (!$request->filled('title')) {
 
@@ -89,11 +52,6 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Description wajib.
-         */
-
         if (!$request->filled('description')) {
 
             return response()->json([
@@ -102,20 +60,9 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Convert gambar ke WEBP.
-         */
-
         $image = $this->convertToWebp(
             $request->file('image_url')
         );
-
-
-        /*
-         * INSERT hanya dilakukan pada saat
-         * user benar-benar menekan "Buat Konten".
-         */
 
         DB::table(self::TABLE)->insert([
 
@@ -139,18 +86,8 @@ class ComingUpNextController
         ], 200);
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE CONTENT
-    |--------------------------------------------------------------------------
-    */
-
     public function updateContent(Request $request)
     {
-        /*
-         * Pastikan konten memang sudah ada.
-         */
 
         if (!DB::table(self::TABLE)->exists()) {
 
@@ -163,18 +100,7 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Tempat menyimpan perubahan.
-         */
-
         $data = [];
-
-
-        /*
-         * Jika user memilih gambar baru,
-         * convert ke WEBP.
-         */
 
         if ($request->hasFile('image_url')) {
 
@@ -185,11 +111,6 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Update title.
-         */
-
         if ($request->filled('title')) {
 
             $data['title'] =
@@ -197,22 +118,12 @@ class ComingUpNextController
 
         }
 
-
-        /*
-         * Update description.
-         */
-
         if ($request->filled('description')) {
 
             $data['description'] =
                 $request->input('description');
 
         }
-
-
-        /*
-         * Tidak ada data yang berubah.
-         */
 
         if (empty($data)) {
 
@@ -224,13 +135,6 @@ class ComingUpNextController
             ], 400);
 
         }
-
-
-        /*
-         * Karena desain tabel ini memang hanya
-         * menyimpan satu konten, update dilakukan
-         * terhadap row yang ada.
-         */
 
         DB::table(self::TABLE)
             ->update($data);
