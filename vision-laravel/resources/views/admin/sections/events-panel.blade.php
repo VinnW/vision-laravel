@@ -18,7 +18,6 @@
                 : 'border-transparent text-slate-500 hover:text-indigo-700'"
         >
             Coming Up Next
-            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-400">Soon</span>
         </button>
 
         <button
@@ -37,12 +36,8 @@
 
     {{-- Coming Up Next --}}
     <div x-show="tab === 'coming'" x-cloak>
-        <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-20 text-center">
-            <p class="text-sm font-medium text-slate-500">
-                Panel Coming Up Next akan dibuat setelah Vision Update selesai.
-            </p>
-        </div>
-    </div>
+    @include('admin.sections.coming-panel')
+</div>
 
 
     {{-- Vision Update --}}

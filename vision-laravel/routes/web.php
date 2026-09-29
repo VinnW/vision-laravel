@@ -4,6 +4,25 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AdminLoginController;
 
+/*
+|--------------------------------------------------------------------------
+| Helper: data Vision Update untuk halaman publik
+|--------------------------------------------------------------------------
+| Data yang sama dengan yang dikelola di vision-update-panel
+| (terbaru di atas, sesuai VisionUpdateController::getContent).
+*/
+$visionUpdates = fn () => DB::table('vision_update_section')
+    ->orderByDesc('id')
+    ->get();
+
+/*
+|--------------------------------------------------------------------------
+| Helper: data Coming Up Next untuk halaman publik
+|--------------------------------------------------------------------------
+| Hanya 1 baris (gambar, judul, deskripsi), null bila belum diisi.
+*/
+$comingUpNext = fn () => DB::table('coming_up_next_section')->first();
+
 Route::get('/', function () {
 
     $slides = DB::table('home_section')
@@ -35,9 +54,31 @@ Route::get('/service', function () {
     return view('public.service');
 })->name('service');
 
-Route::get('/event', function () {
-    return view('public.event');
+Route::get('/event', function () use ($visionUpdates) {
+
+    return view('public.sections.event', [
+        'updates' => $visionUpdates(),
+    ]);
+
 })->name('event');
+
+Route::get('/event/update', function () use ($visionUpdates) {
+
+    return view('public.sections.update', [
+        'updates' => $visionUpdates(),
+        'standalone' => true,
+    ]);
+
+})->name('event.update');
+
+Route::get('/event/coming', function () use ($comingUpNext) {
+
+    return view('public.sections.coming', [
+        'coming' => $comingUpNext(),
+        'standalone' => true,
+    ]);
+
+})->name('event.coming');
 
 Route::get('/contact', function () {
     return view('public.contact');
