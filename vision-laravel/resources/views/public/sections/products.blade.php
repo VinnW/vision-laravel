@@ -1,22 +1,3 @@
-{{--
-    Products / Layanan Section
-    - "Coverflow" style slider: 5 panel terlihat, panel tengah lebih besar &
-      terangkat, sisanya mengecil ke tepi — sesuai wireframe.
-    - Tailwind CSS + Alpine.js untuk state slide aktif & navigasi prev/next.
-    - Setiap produk adalah SATU card tetap (position: absolute) berukuran sama.
-      Perbedaan ukuran dibuat lewat transform: scale() (bukan width/height),
-      supaya animasi hanya memakai transform + opacity yang diproses GPU
-      dan tidak memicu layout ulang -> tetap ringan walau diklik cepat.
-    - Card yang "membungkus" dari ujung kiri ke ujung kanan (loop) dipindah
-      tanpa transisi dan di-fade-in, supaya tidak terbang melintasi layar.
-    - Ukuran/posisi di-set lewat :style (inline CSS), BUKAN lewat class
-      Tailwind yang dirakit di JS — supaya tidak bergantung pada bagaimana
-      Tailwind men-scan class dinamis (rawan tidak ter-generate).
-    - Data produk dikirim ke Alpine lewat @js() (bukan @json) supaya tanda
-      kutip di-escape dengan aman di dalam atribut x-data.
-    - 'image' opsional — kalau kosong akan tampil sebagai blok placeholder
-      abu-abu (tanpa perlu koneksi internet), persis seperti wireframe.
---}}
 @php
     $products = [
         [

@@ -9,7 +9,7 @@
             'tone'       => 'dark',
             'eyebrow'    => "Visual Image Desain\nZurix",
             'heading'    => 'Zuric',
-            'image'      => null,
+            'image'      => asset('storage/image_products/zuric-picture.jpg'),
             'paragraphs' => [
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo',
@@ -19,7 +19,7 @@
             'tone'    => 'light',
             'eyebrow' => "Visual Image Desain\nKalkulator",
             'heading' => "Akumulasikan\nPerlindungan Anda",
-            'image'   => null,
+            'image'   => asset('storage/image_products/smart-calculator.jpg'),
             'subtitle' => 'Smart Calculator',
             'action'  => [
                 'label' => 'Mulai Menghitung',
@@ -27,35 +27,33 @@
             ],
         ],
     ];
+
+    $introImage = asset('storage/image_products/good-services.jpg');
 @endphp
 
 <div x-data="{ calculatorOpen: false, nilai: 100000000, durasi: 10, get estimasi() { return this.durasi > 0 ? Math.round((this.nilai * 0.012 * this.durasi)) : 0 } }">
 
     {{-- ============ Top intro block ============ --}}
-    <section id="service" class="relative overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-indigo-50 py-20 lg:py-28">
-        <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-            <div class="absolute -left-24 top-1/3 h-96 w-96 rounded-full bg-indigo-200/25 blur-3xl"></div>
-            <div class="absolute -right-20 -bottom-16 h-80 w-80 rounded-full bg-[#F2A93B]/15 blur-3xl"></div>
+    <section id="service" class="grid grid-cols-1 md:grid-cols-2">
+
+        {{-- Left — image background memenuhi frame + heading --}}
+        <div
+            style="background-image: linear-gradient(rgba(15,23,42,.45), rgba(15,23,42,.45)), url('{{ $introImage }}'); background-size: cover; background-position: center;"
+            class="relative flex min-h-[30rem] flex-col justify-end bg-slate-500 px-8 py-12 text-white lg:min-h-[34rem] lg:px-14 lg:py-16"
+        >
+            <h1 class="text-3xl font-extrabold leading-tight sm:text-4xl">
+                Visual Image Desain<br />Our Service
+            </h1>
         </div>
 
-        <div class="relative mx-auto grid max-w-7xl items-center gap-14 px-6 lg:grid-cols-2 lg:gap-20 lg:px-10">
-
-            {{-- Left — icon + heading --}}
-            <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
-                <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 shadow-sm backdrop-blur">
-                    <svg class="h-8 w-8 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <path d="m21 15-5-5-9 9" />
-                    </svg>
-                </div>
-                <h1 class="text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
-                    Visual Image Desain<br />Our Service
-                </h1>
+        {{-- Right — intro paragraphs --}}
+        <div class="relative flex min-h-[30rem] items-center overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-indigo-50 px-8 py-12 lg:min-h-[34rem] lg:px-14 lg:py-16">
+            <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                <div class="absolute -left-24 top-1/3 h-96 w-96 rounded-full bg-indigo-200/25 blur-3xl"></div>
+                <div class="absolute -right-20 -bottom-16 h-80 w-80 rounded-full bg-[#F2A93B]/15 blur-3xl"></div>
             </div>
 
-            {{-- Right — intro paragraphs --}}
-            <div class="space-y-5 text-[15px] font-medium leading-relaxed text-slate-600">
+            <div class="relative space-y-5 text-[15px] font-medium leading-relaxed text-slate-600">
                 @foreach ($intro as $paragraph)
                     <p>{{ $paragraph }}</p>
                 @endforeach

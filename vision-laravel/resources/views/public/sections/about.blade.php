@@ -1,5 +1,5 @@
 @php
-    $image ??= null;
+    $image ??= asset('storage/image_products/company-profile.jpg');
 
     $paragraphs ??= [
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
@@ -27,31 +27,7 @@
     <div class="relative mx-auto max-w-7xl px-6 lg:px-10">
         <div class="grid items-stretch gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
 
-            {{-- Left — image panel --}}
-            <div class="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-linear-to-br from-slate-100 via-white to-slate-200 shadow-[0_30px_80px_-30px_rgba(30,41,59,0.2)]">
-                <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_20%_10%,rgba(255,255,255,0.8),transparent_60%)]" aria-hidden="true"></div>
-
-                <div class="relative flex min-h-90 flex-col items-center justify-center px-8 py-16 text-center lg:min-h-full">
-                    @if (!empty($image))
-                        <img
-                            src="{{ $image }}"
-                            alt="{{ config('app.name', 'Perusahaan') }} — company profile"
-                            class="h-full w-full rounded-4xl object-cover"
-                        />
-                    @else
-                        <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 shadow-sm backdrop-blur">
-                            <svg class="h-8 w-8 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <path d="m21 15-5-5-9 9" />
-                            </svg>
-                        </div>
-                        <p class="text-sm font-bold uppercase tracking-wide text-indigo-600">
-                            Image<br />Desain Visual
-                        </p>
-                    @endif
-                </div>
-            </div>
+            {{-- Left — image panel --}} <div class="relative min-h-90 overflow-hidden rounded-[2.5rem] border border-white/60 bg-slate-100 shadow-[0_30px_80px_-30px_rgba(30,41,59,0.2)] lg:min-h-full"> @if (!empty($image)) <img src="{{ $image }}" alt="{{ config('app.name', 'Perusahaan') }} — company profile" class="absolute inset-0 h-full w-full object-cover" /> @else <div class="flex min-h-90 flex-col items-center justify-center text-center lg:min-h-full"> <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 shadow-sm backdrop-blur"> <svg class="h-8 w-8 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"> <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" /> <circle cx="8.5" cy="8.5" r="1.5" /> <path d="m21 15-5-5-9 9" /> </svg> </div> <p class="text-sm font-bold uppercase tracking-wide text-indigo-600"> Image<br />Desain Visual </p> </div> @endif </div>
 
             {{-- Right — article --}}
             <div class="flex flex-col justify-between">
