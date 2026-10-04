@@ -1,40 +1,19 @@
 @php
-    $products = [
-        [
-            'name' => 'Asuransi Kesehatan',
-            'description' => 'Perlindungan kesehatan untuk membantu memberikan rasa aman dalam menghadapi kebutuhan medis dan biaya perawatan.',
-            'image' => asset('storage/image_products/asuransi-kesehatan.jpg'),
-            'link' => '#',
-        ],
+    $detailUrl = \Illuminate\Support\Facades\Route::has('products.detail')
+        ? route('products.detail')
+        : url('/produk');
 
-        [
-            'name' => 'Asuransi Kendaraan',
-            'description' => 'Perlindungan kendaraan dari berbagai risiko sehingga Anda dapat berkendara dengan lebih tenang.',
-            'image' => asset('storage/image_products/asuransi-kendaraan.jpg'),
-            'link' => '#',
-        ],
-
-        [
-            'name' => 'Asuransi Jiwa',
-            'description' => 'Perlindungan finansial bagi Anda dan keluarga untuk menghadapi berbagai risiko kehidupan.',
-            'image' => asset('storage/image_products/asuransi-jiwa.jpg'),
-            'link' => '#',
-        ],
-
-        [
-            'name' => 'Asuransi Properti',
-            'description' => 'Perlindungan untuk rumah dan aset properti dari berbagai risiko yang tidak terduga.',
-            'image' => asset('storage/image_products/asuransi-properti.jpg'),
-            'link' => '#',
-        ],
-
-        [
-            'name' => 'Asuransi Perjalanan',
-            'description' => 'Perlindungan perjalanan untuk membantu Anda menghadapi berbagai risiko selama bepergian.',
-            'image' => asset('storage/image_products/asuransi-perjalanan.jpg'),
-            'link' => '#',
-        ],
-    ];
+    // Data dari config/products.php: hanya ambil yang dibutuhkan slider.
+    // Link menuju halaman detail dan langsung scroll ke produk yang dipilih (#slug).
+    $products = collect(config('products', []))
+        ->map(fn ($p) => [
+            'name'        => $p['name'],
+            'description' => $p['description'],
+            'image'       => asset($p['image']),
+            'link'        => $detailUrl . '#' . $p['slug'],
+        ])
+        ->values()
+        ->all();
 @endphp
 
 <section
@@ -208,6 +187,7 @@
                 </button>
             </div>
 
+            {{-- Menuju halaman detail, langsung ke produk yang sedang aktif --}}
             <a
                 :href="items[active].link"
                 class="mt-5 inline-block text-sm font-semibold text-slate-400 underline decoration-slate-300 underline-offset-4 transition-colors duration-200 hover:text-[#F2A93B] hover:decoration-[#F2A93B]"

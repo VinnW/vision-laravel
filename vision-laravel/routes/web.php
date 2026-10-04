@@ -50,6 +50,22 @@ Route::get('/products', function () {
     return view('public.products');
 })->name('products');
 
+/*
+|--------------------------------------------------------------------------
+| Detail Produk Layanan
+|--------------------------------------------------------------------------
+| Data dari config/products.php (sumber yang sama dengan slider di
+| products.blade.php). Link dari slider: /produk#slug-produk
+*/
+Route::get('/produk', function () {
+
+    return view('public.sections.detail-products', [
+        'products' => collect(config('products', [])),
+        'standalone' => true,
+    ]);
+
+})->name('products.detail');
+
 Route::get('/service', function () {
     return view('public.service');
 })->name('service');

@@ -233,8 +233,8 @@
         >
 
             {{-- Products --}}
-            <a
-                href="{{ Route::has('products') ? route('products') : '#' }}"
+                        <a
+                href="{{ Route::has('products.detail') ? route('products.detail') : '#' }}"
                 class="w-full rounded-full bg-white px-8 py-4 text-center text-sm font-semibold text-slate-700 shadow-[0_18px_40px_-15px_rgba(30,41,59,0.35)] ring-1 ring-slate-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_45px_-15px_rgba(30,41,59,0.4)] sm:w-auto sm:min-w-60"
             >
                 Produk Layanan
