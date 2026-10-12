@@ -50,6 +50,10 @@ Route::get('/products', function () {
     return view('public.products');
 })->name('products');
 
+Route::get('/agent/login', function () {
+    return view('public.sections.agent-login');
+})->name('public.agent-login.page');
+
 /*
 |--------------------------------------------------------------------------
 | Detail Produk Layanan

@@ -6,6 +6,10 @@
 --}}
 
 @php
+    // Awalan URL untuk link menu. Kosong = scroll di halaman yang sama (beranda).
+    // Di halaman lain (mis. login agent) kirim ['navBase' => route('home')].
+    $navBase ??= '';
+
     $navItems = [
         ['label' => 'About Us', 'section' => 'about'],
         ['label' => 'Products', 'section' => 'products'],
@@ -61,7 +65,7 @@
         <nav class="hidden items-center gap-9 lg:flex">
             @foreach ($navItems as $item)
                 <a
-                    href="#{{ $item['section'] }}"
+                    href="{{ $navBase }}#{{ $item['section'] }}"
                     class="group relative text-[13px] font-bold uppercase tracking-wide text-[#1F4FD1] transition-colors hover:text-[#1E3A8A]"
                 >
                     {{ $item['label'] }}
@@ -75,7 +79,7 @@
 
             {{-- Login --}}
             <a
-                href="{{ route('admin.login.page') }}"
+                href="{{ route('public.agent-login.page') }}"
                 class="rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-9 py-2 text-sm font-medium text-white shadow-[0_8px_20px_-8px_rgba(46,111,216,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-8px_rgba(46,111,216,0.8)]"
             >
                 Login
@@ -142,7 +146,7 @@
         <nav class="flex flex-col gap-1 px-6 py-4">
             @foreach ($navItems as $item)
                 <a
-                    href="#{{ $item['section'] }}"
+                    href="{{ $navBase }}#{{ $item['section'] }}"
                     @click="mobileOpen = false"
                     class="rounded-xl px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-[#1F4FD1] hover:bg-slate-50 hover:text-[#1E3A8A]"
                 >
@@ -151,7 +155,7 @@
             @endforeach
 
             <div class="mt-3 flex items-center gap-3 border-t border-slate-200/70 pt-4">
-                <a href="{{ route('admin.login.page') }}" class="flex-1 rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-5 py-2.5 text-center text-sm font-medium text-white">
+                <a href="{{ route('public.agent-login.page') }}" class="flex-1 rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-5 py-2.5 text-center text-sm font-medium text-white">
                     Login
                 </a>
                 <button type="button" class="flex-1 rounded-full border border-[#2E6FD8]/40 px-5 py-2.5 text-sm font-semibold text-[#2E6FD8]">
