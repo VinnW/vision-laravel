@@ -1,62 +1,112 @@
+{{--
+    Service Section
+    - Blok atas: foto full-width memudar ke putih, judul + artikel di kanan
+    - Blok bawah: 2 panel (Zurich & Smart Calculator) dengan gambar + pudar putih
+    - Judul biru tua, tombol pill navy
+    - Logika kalkulator (modal, nilai, durasi, estimasi) tidak diubah
+--}}
+
 @php
+    $introTitle ??= 'Kami Selalu Ada Untuk Anda';
+    $introSubtitle ??= 'Pendampingan yang Hadir di Setiap Langkah';
+
     $intro ??= [
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo',
+        'Bagi kami, layanan asuransi tidak berhenti setelah polis diterbitkan. Kami hadir untuk memastikan setiap kebutuhan Anda mendapatkan perhatian dan tindak lanjut yang tepat.',
+        'Mulai dari konsultasi, pengelolaan polis, follow-up secara berkala, hingga proses klaim, tim kami siap mendampingi Anda dengan respons yang cepat, komunikasi yang jelas, dan solusi yang tepat.',
+        'Karena perlindungan terbaik bukan hanya tentang memiliki asuransi, tetapi tentang memiliki partner yang selalu siap membantu ketika Anda membutuhkannya.',
     ];
+
+    $introImage ??= asset('storage/image_products/good-services.jpg');
+
+    // Jika ada file logo di public/storage/image_products/zurich-logo.png, otomatis dipakai.
+    $zurichLogoPath = 'storage/image_products/zurich-logo.png';
+    $hasZurichLogo  = file_exists(public_path($zurichLogoPath));
 
     $services ??= [
         [
-            'tone'       => 'dark',
-            'eyebrow'    => "Visual Image Desain\nZurix",
-            'heading'    => 'Zuric',
+            'align'      => 'right',   // posisi konten: 'right' | 'left'
+            'fade'       => 'top',     // pudar putih: 'top' | 'left'
+            'brand'      => 'Zurich',
+            'logo'       => $hasZurichLogo ? asset($zurichLogoPath) : null,
+            'heading'    => 'Mitra Terpercaya',
             'image'      => asset('storage/image_products/zuric-picture.jpg'),
             'paragraphs' => [
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.',
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices gravida. Risus commodo',
+                'Bersama Zurich, Vision hadir bukan hanya sebagai penyedia solusi asuransi, tetapi sebagai partner yang selalu siap mendampingi Anda di setiap langkah.',
             ],
         ],
         [
-            'tone'    => 'light',
-            'eyebrow' => "Visual Image Desain\nKalkulator",
-            'heading' => "Akumulasikan\nPerlindungan Anda",
+            'align'   => 'left',
+            'fade'    => 'left',
+            'heading' => "Hitung Premi\nLayanan Anda",
             'image'   => asset('storage/image_products/smart-calculator.jpg'),
-            'subtitle' => 'Smart Calculator',
             'action'  => [
-                'label' => 'Mulai Menghitung',
+                'label' => 'Smart Calculator',
                 'type'  => 'calculator',
             ],
         ],
     ];
-
-    $introImage = asset('storage/image_products/good-services.jpg');
 @endphp
 
 <div x-data="{ calculatorOpen: false, nilai: 100000000, durasi: 10, get estimasi() { return this.durasi > 0 ? Math.round((this.nilai * 0.012 * this.durasi)) : 0 } }">
 
     {{-- ============ Top intro block ============ --}}
-    <section id="service" class="grid grid-cols-1 md:grid-cols-2">
+    <section id="service" class="relative overflow-hidden bg-white">
 
-        {{-- Left — image background memenuhi frame + heading --}}
-        <div
-            style="background-image: linear-gradient(rgba(15,23,42,.45), rgba(15,23,42,.45)), url('{{ $introImage }}'); background-size: cover; background-position: center;"
-            class="relative flex min-h-[30rem] flex-col justify-end bg-slate-500 px-8 py-12 text-white lg:min-h-[34rem] lg:px-14 lg:py-16"
+        {{-- Foto latar --}}
+        <img
+            src="{{ $introImage }}"
+            alt="{{ $introTitle }}"
+            class="absolute inset-0 h-full w-full object-cover object-[25%_center]"
+        />
+
+        {{-- Overlay mobile: putih rata agar teks terbaca --}}
+        <div class="pointer-events-none absolute inset-0 bg-white/80 lg:hidden" aria-hidden="true"></div>
+
+        {{-- Overlay desktop: pudar ke putih dari tengah ke kanan --}}
+        <div class="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-transparent from-35% via-white/85 via-60% to-white lg:block" aria-hidden="true"></div>
+
+        {{-- Pudar putih di atas (area header) --}}
+        <div class="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-white via-white/60 to-transparent" aria-hidden="true"></div>
+
+        {{-- Pola hexagon garis putih (kiri) --}}
+        <svg
+            class="pointer-events-none absolute left-0 top-10 hidden h-80 w-80 text-white/90 md:block"
+            aria-hidden="true"
+            style="-webkit-mask-image: linear-gradient(to right, black 20%, transparent 100%); mask-image: linear-gradient(to right, black 20%, transparent 100%);"
         >
-            <h1 class="text-3xl font-extrabold leading-tight sm:text-4xl">
-                Visual Image Desain<br />Our Service
-            </h1>
-        </div>
+            <defs>
+                <pattern id="service-hex-tl" width="56" height="98" patternUnits="userSpaceOnUse">
+                    <path
+                        fill="currentColor"
+                        fill-rule="evenodd"
+                        d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z"
+                        transform="scale(2)"
+                    />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#service-hex-tl)" />
+        </svg>
 
-        {{-- Right — intro paragraphs --}}
-        <div class="relative flex min-h-[30rem] items-center overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-indigo-50 px-8 py-12 lg:min-h-[34rem] lg:px-14 lg:py-16">
-            <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-                <div class="absolute -left-24 top-1/3 h-96 w-96 rounded-full bg-indigo-200/25 blur-3xl"></div>
-                <div class="absolute -right-20 -bottom-16 h-80 w-80 rounded-full bg-[#F2A93B]/15 blur-3xl"></div>
-            </div>
+        {{-- Konten --}}
+        <div class="relative mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-4">
+    <div class="grid lg:min-h-[5rem] lg:grid-cols-2 lg:items-center">
 
-            <div class="relative space-y-5 text-[15px] font-medium leading-relaxed text-slate-600">
-                @foreach ($intro as $paragraph)
-                    <p>{{ $paragraph }}</p>
-                @endforeach
+                <div class="lg:col-start-2 lg:pl-4">
+                    <h1 class="text-3xl font-extrabold uppercase leading-[1.1] tracking-tight text-[#1F4E9E] sm:text-4xl lg:text-[2.6rem]">
+                        {{ $introTitle }}
+                    </h1>
+
+                    <p class="mt-6 text-[13px] font-bold leading-snug text-[#1B2F8F] sm:text-sm">
+                        {{ $introSubtitle }}
+                    </p>
+
+                    <div class="mt-4 space-y-4 text-[13px] font-medium leading-snug text-[#1B2F8F] sm:text-sm">
+                        @foreach ($intro as $paragraph)
+                            <p>{{ $paragraph }}</p>
+                        @endforeach
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -65,73 +115,80 @@
     <section class="grid grid-cols-1 md:grid-cols-2">
         @foreach ($services as $service)
             @php
-                $isDark = ($service['tone'] ?? 'light') === 'dark';
+                $alignRight = ($service['align'] ?? 'left') === 'right';
+                $fade       = $service['fade'] ?? 'left';
             @endphp
 
-            <div
-                @if(!empty($service['image']))
-                    style="background-image: linear-gradient({{ $isDark ? 'rgba(15,23,42,.72),rgba(15,23,42,.72)' : 'rgba(255,255,255,.82),rgba(255,255,255,.82)' }}), url('{{ $service['image'] }}'); background-size: cover; background-position: center;"
+            <div class="relative flex min-h-[22rem] flex-col justify-between overflow-hidden bg-slate-100 px-8 py-8 lg:min-h-[20rem] lg:px-12">
+
+                {{-- Gambar --}}
+                @if (!empty($service['image']))
+                    <img
+                        src="{{ $service['image'] }}"
+                        alt="{{ $service['brand'] ?? strip_tags($service['heading']) }}"
+                        class="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy"
+                    />
                 @endif
-                class="relative flex min-h-[30rem] flex-col justify-between px-8 py-12 lg:min-h-[34rem] lg:px-14 lg:py-16 {{ $isDark ? 'bg-slate-500 text-white' : 'bg-slate-100 text-slate-900' }}"
-            >
-                {{-- Eyebrow: icon + label --}}
-                <div class="flex items-center gap-4">
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{ $isDark ? 'bg-white/15' : 'bg-white' }} shadow-sm">
-                        <svg class="h-6 w-6 {{ $isDark ? 'text-white' : 'text-slate-600' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="m21 15-5-5-9 9" />
-                        </svg>
+
+                {{-- Pudar putih --}}
+                @if ($fade === 'top')
+                    <div class="pointer-events-none absolute inset-0 bg-linear-to-b from-white/70 via-white/30 to-transparent" aria-hidden="true"></div>
+                    <div class="pointer-events-none absolute inset-0 bg-linear-to-l from-white/50 to-transparent" aria-hidden="true"></div>
+                @else
+                    <div class="pointer-events-none absolute inset-0 bg-white/60 md:hidden" aria-hidden="true"></div>
+                    <div class="pointer-events-none absolute inset-0 hidden bg-linear-to-r from-white/95 via-white/55 via-45% to-transparent md:block" aria-hidden="true"></div>
+                @endif
+
+                {{-- Brand / logo (opsional) --}}
+                @if (!empty($service['logo']) || !empty($service['brand']))
+                    <div class="relative flex {{ $alignRight ? 'justify-end lg:pr-4' : 'justify-start' }}">
+                        @if (!empty($service['logo']))
+                            <img src="{{ $service['logo'] }}" alt="{{ $service['brand'] ?? '' }}" class="h-14 w-auto" />
+                        @else
+                            <div class="flex items-center gap-3 text-[#2167AE]">
+                                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#2167AE] text-xl font-extrabold text-white">Z</span>
+                                <span class="font-serif text-3xl font-semibold uppercase tracking-wider">{{ $service['brand'] }}</span>
+                            </div>
+                        @endif
                     </div>
-                    <p class="text-sm font-semibold leading-snug {{ $isDark ? 'text-white/90' : 'text-slate-700' }}">
-                        {!! nl2br(e($service['eyebrow'])) !!}
-                    </p>
-                </div>
+                @else
+                    <div class="relative"></div>
+                @endif
 
-                {{-- Heading --}}
-                <h2 class="my-10 text-center text-3xl font-extrabold uppercase leading-tight sm:text-4xl">
-                    {!! nl2br(e($service['heading'])) !!}
-                </h2>
+                {{-- Heading + action --}}
+                <div class="relative {{ $alignRight ? 'lg:ml-auto lg:w-[80%] lg:text-right' : '' }} {{ empty($service['paragraphs']) ? 'my-10' : 'mt-6 mb-26' }}">
+    <h2 class="text-2xl font-extrabold uppercase leading-[1.1] tracking-tight text-[#1F4E9E] sm:text-3xl lg:text-[2rem]">
+        {!! nl2br(e($service['heading'])) !!}
+    </h2>
 
-                {{-- Footer: either descriptive paragraphs, or subtitle + CTA --}}
-                <div>
-                    @if (!empty($service['paragraphs']))
-                        <div class="space-y-4 text-[15px] font-medium leading-relaxed {{ $isDark ? 'text-white/85' : 'text-slate-600' }}">
-                            @foreach ($service['paragraphs'] as $paragraph)
-                                <p>{{ $paragraph }}</p>
-                            @endforeach
-                        </div>
-                    @endif
+                    @if (!empty($service['action']))
+                        @php
+                            $btnClass = 'mt-4 inline-block rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-6 py-1.5 text-xs font-medium text-white shadow-[0_10px_22px_-10px_rgba(27,52,120,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_-10px_rgba(27,52,120,0.8)]';
+                        @endphp
 
-                    @if (!empty($service['subtitle']) || !empty($service['action']))
-                        <div class="text-center">
-                            @if (!empty($service['subtitle']))
-                                <p class="text-sm font-bold uppercase tracking-wide {{ $isDark ? 'text-white/80' : 'text-slate-700' }}">
-                                    {{ $service['subtitle'] }}
-                                </p>
-                            @endif
-
-                            @if (!empty($service['action']))
-                                @if ($service['action']['type'] === 'calculator')
-                                    <button
-                                        type="button"
-                                        @click="calculatorOpen = true"
-                                        class="mt-3 text-sm font-semibold uppercase tracking-wide text-slate-400 underline decoration-slate-300 underline-offset-4 transition-colors duration-200 hover:text-[#F2A93B] hover:decoration-[#F2A93B]"
-                                    >
-                                        {{ $service['action']['label'] }}
-                                    </button>
-                                @else
-                                    <a
-                                        href="{{ $service['action']['href'] ?? '#' }}"
-                                        class="mt-3 inline-block text-sm font-semibold uppercase tracking-wide text-slate-400 underline decoration-slate-300 underline-offset-4 transition-colors duration-200 hover:text-[#F2A93B] hover:decoration-[#F2A93B]"
-                                    >
-                                        {{ $service['action']['label'] }}
-                                    </a>
-                                @endif
-                            @endif
-                        </div>
+                        @if ($service['action']['type'] === 'calculator')
+                            <button type="button" @click="calculatorOpen = true" class="{{ $btnClass }}">
+                                {{ $service['action']['label'] }}
+                            </button>
+                        @else
+                            <a href="{{ $service['action']['href'] ?? '#' }}" class="{{ $btnClass }}">
+                                {{ $service['action']['label'] }}
+                            </a>
+                        @endif
                     @endif
                 </div>
+
+                {{-- Deskripsi --}}
+                @if (!empty($service['paragraphs']))
+                    <div class="relative space-y-3 text-[13px] font-medium leading-snug text-[#1B2F8F] sm:text-sm {{ $alignRight ? 'lg:ml-auto lg:w-[80%] lg:text-right' : '' }}">
+    @foreach ($service['paragraphs'] as $paragraph)
+    <p class="relative -top-24">{{ $paragraph }}</p>
+@endforeach
+</div>
+                @else
+                    <div class="relative"></div>
+                @endif
             </div>
         @endforeach
     </section>
@@ -145,7 +202,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm"
         style="display: none;"
         @keydown.escape.window="calculatorOpen = false"
     >
@@ -166,37 +223,37 @@
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
 
-            <h3 class="text-xl font-extrabold text-slate-900">Smart Calculator</h3>
-            <p class="mt-1 text-sm font-medium text-slate-500">Hitung estimasi perlindungan Anda.</p>
+            <h3 class="text-xl font-extrabold text-[#1F4E9E]">Smart Calculator</h3>
+            <p class="mt-1 text-sm font-medium text-[#1B2F8F]/70">Hitung estimasi perlindungan Anda.</p>
 
             <div class="mt-6 space-y-5">
                 <label class="block">
-                    <span class="text-sm font-semibold text-slate-700">Nilai Pertanggungan (Rp)</span>
+                    <span class="text-sm font-semibold text-[#1B2F8F]">Nilai Pertanggungan (Rp)</span>
                     <input
                         type="number"
                         x-model.number="nilai"
                         min="0"
                         step="1000000"
-                        class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-colors focus:border-[#F2A93B]"
+                        class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-colors focus:border-[#2F57A8]"
                     />
                 </label>
 
                 <label class="block">
-                    <span class="text-sm font-semibold text-slate-700">Durasi (tahun)</span>
+                    <span class="text-sm font-semibold text-[#1B2F8F]">Durasi (tahun)</span>
                     <input
                         type="number"
                         x-model.number="durasi"
                         min="1"
                         max="30"
-                        class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-colors focus:border-[#F2A93B]"
+                        class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-colors focus:border-[#2F57A8]"
                     />
                 </label>
 
                 {{-- NOTE: formula di atas (nilai * 0.012 * durasi) hanyalah dummy —
                      ganti sesuai perhitungan bisnis Anda yang sebenarnya. --}}
-                <div class="rounded-2xl bg-slate-50 px-5 py-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Estimasi Premi</p>
-                    <p class="mt-1 text-2xl font-extrabold text-slate-900" x-text="'Rp ' + estimasi.toLocaleString('id-ID')"></p>
+                <div class="rounded-2xl bg-sky-50 px-5 py-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#1B2F8F]/60">Estimasi Premi</p>
+                    <p class="mt-1 text-2xl font-extrabold text-[#1F4E9E]" x-text="'Rp ' + estimasi.toLocaleString('id-ID')"></p>
                 </div>
             </div>
         </div>
