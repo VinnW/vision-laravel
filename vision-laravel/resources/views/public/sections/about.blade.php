@@ -27,7 +27,7 @@
     ];
 @endphp
 
-<section id="about" class="relative overflow-hidden bg-white">
+<section id="about" class="scroll-mt-16 relative overflow-hidden bg-white">
 
     {{-- ========================================================= --}}
     {{-- IMAGE PANEL (kiri) --}}

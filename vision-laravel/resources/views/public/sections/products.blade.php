@@ -4,6 +4,7 @@
     - Kartu berbingkai biru muda, rounded besar
     - Judul, deskripsi, panah kiri/kanan, dan tombol "Pelajari Lebih" di bawah slider
     - Logika slider (rel, go, prev, next, panelStyle, swipe, keyboard) tetap sama
+    - Scroll margin menggunakan pixel agar posisi navigasi header lebih presisi
 --}}
 
 @php
@@ -23,6 +24,20 @@
         ->values()
         ->all();
 @endphp
+
+<style>
+    /* Jarak scroll untuk desktop */
+    #products {
+        scroll-margin-top: 55px;
+    }
+
+    /* Jarak scroll untuk tablet dan mobile */
+    @media (max-width: 1023px) {
+        #products {
+            scroll-margin-top: 90px;
+        }
+    }
+</style>
 
 <section
     x-data="{
@@ -45,21 +60,33 @@
         go(target) {
             const t = ((target % this.total) + this.total) % this.total;
             if (t === this.active) return;
+
             const step = this.rel(t, this.active);
             const wrapped = [];
+
             this.items.forEach((_, i) => {
                 const expected = this.rel(i, this.active) - step;
                 if (expected !== this.rel(i, t)) wrapped.push(i);
             });
+
             this.jumping = wrapped;
             this.active = t;
-            clearTimeout(this.jumpTimer);
-            this.jumpTimer = setTimeout(() => { this.jumping = [] }, 50);
-        },
-        prev() { this.go(this.active - 1) },
-        next() { this.go(this.active + 1) },
 
-        // Semua card berukuran 300x460, diposisikan di tengah track secara vertikal.
+            clearTimeout(this.jumpTimer);
+            this.jumpTimer = setTimeout(() => {
+                this.jumping = [];
+            }, 50);
+        },
+
+        prev() {
+            this.go(this.active - 1);
+        },
+
+        next() {
+            this.go(this.active + 1);
+        },
+
+        // Semua card berukuran 300x400, diposisikan absolute di tengah track.
         // Perbedaan ukuran hanya lewat scale().
         panelStyle(i) {
             const off = this.rel(i, this.active);
@@ -71,15 +98,18 @@
             const opacity = hidden ? 0 : 1;
             const z = abs === 0 ? 20 : abs === 1 ? 10 : 0;
             const ease = '0.55s cubic-bezier(0.22, 1, 0.36, 1)';
+
             const transition = isJumping
                 ? 'none'
                 : `transform ${ease}, opacity 0.4s ease`;
+
             return `left:50%; top:50%; width:300px; height:400px; opacity:${opacity}; z-index:${z}; transform-origin:50% 50%; transform:translate3d(calc(-50% + ${x}px), -50%, 0) scale(${scale}); transition:${transition}; will-change:transform, opacity; backface-visibility:hidden;`;
         },
     }"
     @keydown.left.window="prev()"
     @keydown.right.window="next()"
-    id="products" class="relative overflow-hidden bg-white pb-16 pt-28 lg:pb-20 lg:pt-32"
+    id="products"
+    class="relative overflow-hidden bg-white pb-16 pt-28 lg:pb-20 lg:pt-32"
 >
     {{-- Pola hexagon dekoratif (kiri bawah) --}}
     <svg
@@ -97,6 +127,7 @@
                 />
             </pattern>
         </defs>
+
         <rect width="100%" height="100%" fill="url(#products-hex-bl)" />
     </svg>
 
@@ -116,13 +147,13 @@
                 />
             </pattern>
         </defs>
+
         <rect width="100%" height="100%" fill="url(#products-hex-br)" />
     </svg>
 
-
     <div class="relative">
 
-        {{-- Slider track: full-width, card diposisikan absolute, digeser lewat transform --}}
+        {{-- Slider track: full-width, card diposisikan absolute --}}
         <div
             class="relative mx-auto w-full select-none"
             style="height: 350px;"
@@ -130,7 +161,11 @@
             @touchend.passive="
                 if (touchX !== null) {
                     const dx = $event.changedTouches[0].clientX - touchX;
-                    if (Math.abs(dx) > 40) { dx < 0 ? next() : prev() }
+
+                    if (Math.abs(dx) > 40) {
+                        dx < 0 ? next() : prev();
+                    }
+
                     touchX = null;
                 }
             "
@@ -154,10 +189,18 @@
                         />
                     </template>
 
-                    {{-- Placeholder abu-abu, dummy, tanpa perlu internet --}}
+                    {{-- Placeholder abu-abu --}}
                     <template x-if="!item.image">
                         <div class="flex h-full w-full items-center justify-center bg-slate-200">
-                            <svg class="h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                class="h-8 w-8 text-slate-400"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                 <path d="m21 15-5-5-9 9" />
@@ -180,14 +223,22 @@
                     aria-label="Produk sebelumnya"
                     class="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
                 >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        class="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m15 18-6-6 6-6" />
                     </svg>
                 </button>
 
                 <div class="min-w-0 flex-1">
 
-                    {{-- Judul: semua item ditumpuk di satu sel grid, yang aktif di-fade --}}
+                    {{-- Judul --}}
                     <div class="grid">
                         <template x-for="(item, i) in items" :key="'title-' + i">
                             <h2
@@ -204,7 +255,7 @@
                         </template>
                     </div>
 
-                    {{-- Deskripsi: sama, ditumpuk & di-fade --}}
+                    {{-- Deskripsi --}}
                     <div class="mx-auto mt-3 grid max-w-md">
                         <template x-for="(item, i) in items" :key="'desc-' + i">
                             <p
@@ -221,7 +272,7 @@
                         </template>
                     </div>
 
-                    {{-- Menuju halaman detail, langsung ke produk yang sedang aktif --}}
+                    {{-- Menuju halaman detail produk yang sedang aktif --}}
                     <a
                         :href="items[active].link"
                         class="mt-4 inline-block rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-9 py-2 text-xs font-medium text-white shadow-[0_10px_22px_-10px_rgba(27,52,120,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_-10px_rgba(27,52,120,0.8)]"
@@ -238,7 +289,15 @@
                     aria-label="Produk berikutnya"
                     class="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
                 >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        class="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m9 18 6-6-6-6" />
                     </svg>
                 </button>

@@ -50,7 +50,7 @@
 <div x-data="{ calculatorOpen: false, nilai: 100000000, durasi: 10, get estimasi() { return this.durasi > 0 ? Math.round((this.nilai * 0.012 * this.durasi)) : 0 } }">
 
     {{-- ============ Top intro block ============ --}}
-    <section id="service" class="relative overflow-hidden bg-white">
+    <section id="service" class="relative scroll-mt-24 overflow-hidden bg-white">
 
         {{-- Foto latar --}}
         <img

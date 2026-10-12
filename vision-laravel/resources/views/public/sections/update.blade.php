@@ -64,7 +64,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Vision Update — {{ config('app.name') }}</title>
@@ -73,50 +73,71 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-slate-50 antialiased">
-
-    {{-- Kalau file induk punya header/navbar, include di sini, misalnya: --}}
-    {{-- @include('public.header') --}}
+<body class="bg-white antialiased">
 @endif
 
 
 {{-- Full page: setinggi layar, tanpa batas lebar --}}
 <section
     id="vision-update"
-    class="relative min-h-screen w-full overflow-hidden bg-slate-50 py-12 lg:py-16"
+    class="relative min-h-screen w-full overflow-hidden bg-white py-12 lg:py-16"
 >
 
-    {{-- Decorative mesh-gradient orbs, consistent with the about section --}}
-    <div
-        class="pointer-events-none absolute inset-0 overflow-hidden"
+    {{-- Pola hexagon (kiri, abu-abu tipis) --}}
+    <svg
+        class="pointer-events-none absolute inset-y-0 left-0 hidden h-full w-72 text-slate-200/80 md:block"
         aria-hidden="true"
+        style="-webkit-mask-image: linear-gradient(to right, black 15%, transparent 100%); mask-image: linear-gradient(to right, black 15%, transparent 100%);"
     >
-        <div
-            class="absolute -left-24 top-1/4 h-96 w-96 rounded-full bg-indigo-300/20 blur-3xl"
-        ></div>
+        <defs>
+            <pattern id="update-hex-l" width="56" height="98" patternUnits="userSpaceOnUse">
+                <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z"
+                    transform="scale(2)"
+                />
+            </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#update-hex-l)" />
+    </svg>
 
-        <div
-            class="absolute -right-20 -bottom-24 h-112 w-112 rounded-full bg-[#F2A93B]/15 blur-3xl"
-        ></div>
-    </div>
-
-
-    {{-- Lebar penuh, padding samping ikut membesar di layar lebar --}}
-    <div
-        class="relative w-full px-6 sm:px-10 lg:px-16 xl:px-24 2xl:px-32"
+    {{-- Pola hexagon (kanan, biru muda) --}}
+    <svg
+        class="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-96 text-sky-200/70 md:block"
+        aria-hidden="true"
+        style="-webkit-mask-image: linear-gradient(to left, black 20%, transparent 100%); mask-image: linear-gradient(to left, black 20%, transparent 100%);"
     >
+        <defs>
+            <pattern id="update-hex-r" width="56" height="98" patternUnits="userSpaceOnUse">
+                <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z"
+                    transform="scale(2)"
+                />
+            </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#update-hex-r)" />
+    </svg>
+
+
+    <div class="relative mx-auto max-w-6xl px-6 lg:px-10">
+
+        {{-- Judul halaman (tersembunyi secara visual, tetap ada untuk SEO & aksesibilitas) --}}
+        <h2 class="sr-only">Vision Update</h2>
 
         {{-- Tombol kembali --}}
         <a
             href="{{ $backUrl }}"
-            class="group mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition-all duration-200 hover:-translate-x-0.5 hover:border-[#F2A93B]/40 hover:text-[#F2A93B] hover:shadow-md"
+            class="group mb-8 inline-flex items-center gap-2 rounded-full border-2 border-[#10127A] bg-white/80 px-5 py-1.5 text-sm font-semibold text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white"
         >
             <svg
                 class="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
+                stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
@@ -128,26 +149,14 @@
         </a>
 
 
-        {{-- Heading --}}
-        <h2
-            class="text-4xl font-extrabold uppercase leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
-        >
-            Vision Update
-        </h2>
-
-        <div
-            class="mt-3 h-1.5 w-20 rounded-full bg-linear-to-r from-[#F2A93B] to-[#E8823C]"
-        ></div>
-
-
         @if ($updates->isEmpty())
 
             {{-- Empty state --}}
             <div
-                class="mt-12 rounded-4xl border-2 border-dashed border-slate-200 bg-white/70 py-20 text-center backdrop-blur"
+                class="mt-4 rounded-[2rem] border-2 border-dashed border-[#6BB0FF]/60 bg-white/70 py-20 text-center backdrop-blur"
             >
                 <svg
-                    class="mx-auto mb-4 h-10 w-10 text-slate-300"
+                    class="mx-auto mb-4 h-10 w-10 text-[#6BB0FF]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -161,7 +170,7 @@
                     <path d="m21 16-5-5-9 9" />
                 </svg>
 
-                <p class="text-sm font-medium text-slate-500">
+                <p class="text-sm font-medium text-[#1B2F8F]">
                     Belum ada Vision Update.
                 </p>
             </div>
@@ -169,123 +178,100 @@
         @else
 
             {{-- List --}}
-            {{-- IMPORTANT:
-                 Tidak lagi menggunakan fixed height atau overflow-y-auto.
-                 Seluruh halaman sekarang mengikuti scroll utama browser.
-            --}}
-            <div class="mt-8">
+            {{-- Seluruh halaman mengikuti scroll utama browser. --}}
+            <div data-vu-scroll class="space-y-12 lg:space-y-14">
 
-                <div
-                    data-vu-scroll
-                    class="space-y-12 lg:space-y-16"
-                >
+                @foreach ($updates as $update)
 
-                    @foreach ($updates as $update)
-
-                        @php
-                            $src = $imageSrc($update->image_url ?? '');
-                            $paragraphs = $toParagraphs($update->text_body ?? '');
-                        @endphp
+                    @php
+                        $src = $imageSrc($update->image_url ?? '');
+                        $paragraphs = $toParagraphs($update->text_body ?? '');
+                    @endphp
 
 
-                        <article
-                            class="grid items-start gap-6 lg:grid-cols-2 lg:gap-12"
+                    <article
+                        data-vu-item
+                        class="grid items-start gap-6 lg:grid-cols-[18rem_1fr] lg:gap-14"
+                    >
+
+                        {{-- Left — image --}}
+                        <div
+                            class="relative aspect-19/20 w-full max-w-sm overflow-hidden rounded-[2rem] border-4 border-[#6BB0FF] bg-linear-to-br from-sky-50 via-white to-sky-100 shadow-[0_20px_40px_-20px_rgba(30,64,175,0.35)] lg:max-w-none"
                         >
 
-                            {{-- Left — image --}}
-                            <div
-                                class="relative aspect-41/28 overflow-hidden rounded-[2.5rem] border border-white/60 bg-linear-to-br from-slate-100 via-white to-slate-200 shadow-[0_30px_80px_-30px_rgba(30,41,59,0.2)]"
-                            >
+                            @if ($src !== '')
 
-                                @if ($src !== '')
+                                <img
+                                    src="{{ $src }}"
+                                    alt="{{ $update->text_title }}"
+                                    loading="lazy"
+                                    class="h-full w-full object-cover"
+                                    onerror="this.style.visibility='hidden'"
+                                />
 
-                                    <img
-                                        src="{{ $src }}"
-                                        alt="{{ $update->text_title }}"
-                                        loading="lazy"
-                                        class="h-full w-full object-cover"
-                                        onerror="this.style.visibility='hidden'"
-                                    />
-
-                                @else
-
-                                    <div
-                                        class="flex h-full w-full flex-col items-center justify-center text-center"
-                                    >
-                                        <div
-                                            class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/80 shadow-sm backdrop-blur"
-                                        >
-                                            <svg
-                                                class="h-7 w-7 text-slate-500"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.6"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <rect
-                                                    x="3"
-                                                    y="4"
-                                                    width="18"
-                                                    height="14"
-                                                    rx="2"
-                                                />
-
-                                                <circle
-                                                    cx="8.5"
-                                                    cy="9.5"
-                                                    r="1.5"
-                                                />
-
-                                                <path d="m21 16-5-5-9 9" />
-                                            </svg>
-                                        </div>
-
-                                        <p
-                                            class="text-sm font-bold uppercase tracking-wide text-indigo-600"
-                                        >
-                                            Galeri Event
-                                        </p>
-                                    </div>
-
-                                @endif
-
-                            </div>
-
-
-                            {{-- Right — text --}}
-                            <div>
-
-                                <h3
-                                    class="text-3xl font-extrabold uppercase leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
-                                >
-                                    {{ $update->text_title }}
-                                </h3>
-
+                            @else
 
                                 <div
-                                    class="mt-6 space-y-5 text-base font-medium leading-relaxed text-slate-700 lg:text-lg"
+                                    class="flex h-full w-full flex-col items-center justify-center text-center"
                                 >
+                                    <div
+                                        class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/80 shadow-sm backdrop-blur"
+                                    >
+                                        <svg
+                                            class="h-7 w-7 text-[#2F57A8]"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.6"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            aria-hidden="true"
+                                        >
+                                            <rect x="3" y="4" width="18" height="14" rx="2" />
+                                            <circle cx="8.5" cy="9.5" r="1.5" />
+                                            <path d="m21 16-5-5-9 9" />
+                                        </svg>
+                                    </div>
 
-                                    @foreach ($paragraphs as $paragraph)
-
-                                        <p class="whitespace-pre-line">
-                                            {{ $paragraph }}
-                                        </p>
-
-                                    @endforeach
-
+                                    <p class="text-sm font-bold uppercase tracking-wide text-[#2F57A8]">
+                                        Galeri Event
+                                    </p>
                                 </div>
+
+                            @endif
+
+                        </div>
+
+
+                        {{-- Right — text --}}
+                        <div class="lg:max-w-2xl">
+
+                            <h3
+                                class="text-3xl font-extrabold uppercase leading-[1.1] tracking-tight text-[#1F4E9E] sm:text-4xl lg:text-[2.4rem]"
+                            >
+                                {{ $update->text_title }}
+                            </h3>
+
+
+                            <div
+                                class="mt-6 space-y-5 text-[13px] font-medium leading-snug text-slate-900 sm:text-sm"
+                            >
+
+                                @foreach ($paragraphs as $paragraph)
+
+                                    <p class="whitespace-pre-line">
+                                        {{ $paragraph }}
+                                    </p>
+
+                                @endforeach
 
                             </div>
 
-                        </article>
+                        </div>
 
-                    @endforeach
+                    </article>
 
-                </div>
+                @endforeach
 
             </div>
 
@@ -294,31 +280,64 @@
     </div>
 
 
-    <style>
-        .vu-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
-        }
+    {{-- Tombol panah atas / bawah: pindah antar update --}}
+    @if (!$updates->isEmpty() && $updates->count() > 1)
+        <div class="fixed right-4 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-3 sm:right-8 lg:right-12">
 
-        .vu-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
+            <button
+                type="button"
+                data-vu-up
+                aria-label="Update sebelumnya"
+                class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] bg-white/90 text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
+            >
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m18 15-6-6-6 6" />
+                </svg>
+            </button>
 
-        .vu-scroll::-webkit-scrollbar-track {
-            background: #e2e8f0;
-            border-radius: 9999px;
-        }
+            <button
+                type="button"
+                data-vu-down
+                aria-label="Update berikutnya"
+                class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] bg-white/90 text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
+            >
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </button>
 
-        .vu-scroll::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 9999px;
-        }
+        </div>
 
-        .vu-scroll::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-    </style>
+        <script>
+            (function () {
+                var items = Array.prototype.slice.call(document.querySelectorAll('[data-vu-item]'));
+                var up = document.querySelector('[data-vu-up]');
+                var down = document.querySelector('[data-vu-down]');
+                var offset = 24; // jarak atas saat berpindah antar update
 
+                if (!items.length || !up || !down) { return; }
+
+                function top(el) {
+                    return el.getBoundingClientRect().top + window.scrollY;
+                }
+
+                function currentIndex() {
+                    var y = window.scrollY + offset + 10;
+                    var idx = 0;
+                    items.forEach(function (el, i) { if (top(el) <= y) { idx = i; } });
+                    return idx;
+                }
+
+                function goTo(i) {
+                    i = Math.max(0, Math.min(items.length - 1, i));
+                    window.scrollTo({ top: top(items[i]) - offset, behavior: 'smooth' });
+                }
+
+                up.addEventListener('click', function () { goTo(currentIndex() - 1); });
+                down.addEventListener('click', function () { goTo(currentIndex() + 1); });
+            })();
+        </script>
+    @endif
 
 </section>
 

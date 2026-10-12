@@ -89,7 +89,9 @@
 @endphp
 
 
-<section id="event" class="grid grid-cols-1 bg-white lg:grid-cols-2">
+
+<section id="event" class="scroll-mt-14 grid grid-cols-1 bg-white lg:grid-cols-2">
+
 
     @foreach ($columns as $column)
 
@@ -141,7 +143,7 @@
 
             @endif
 
-            class="relative flex min-h-[36rem] flex-col justify-end overflow-hidden bg-linear-to-br from-[#EDE7FB] via-[#E9F0FF] to-[#E3F2FB] px-8 pb-14 pt-44 sm:px-12 lg:min-h-[42rem] lg:px-[4.5rem]"
+            class="relative flex min-h-[36rem] flex-col justify-end overflow-hidden bg-linear-to-br from-[#EDE7FB] via-[#E9F0FF] to-[#E3F2FB] px-8 pb-14 pt-44 sm:px-12 lg:min-h-[44rem] lg:px-[4.5rem]"
         >
 
 
