@@ -8,7 +8,8 @@ use App\Http\Controllers\{
     VisionUpdateController,
     EventsController,
     AgentPageEditController,
-    AgentLoginController
+    AgentLoginController,
+    ProductsController
 };
 
 
@@ -65,6 +66,19 @@ Route::middleware(['web', 'auth:admin'])
             Route::post('/create-coming-up-next-content', 'createContent');
 
             Route::put('/update-coming-up-next-content', 'updateContent');
+
+        });
+        
+
+        /* Coming Up Next */
+
+        Route::controller(ProductsController::class)->group(function () {
+
+            Route::get('/products', 'getProducts');
+
+            Route::post('/create-products', 'createProducts');
+
+            Route::put('/update-products', 'updateProducts');
 
         });
 
