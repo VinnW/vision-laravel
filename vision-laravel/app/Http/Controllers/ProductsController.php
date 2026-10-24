@@ -1,80 +1,267 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Traits\ConvertsToWebp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Traits\ConvertsToWebp;
-use Intervention\Image\Length;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
-class ProductsController {
-
+class ProductsController
+{
     use ConvertsToWebp;
 
-    public function getProducts(){
-        $result = DB::table('products')->get();
+    /**
+     * Folder penyimpanan katalog PDF di disk "public"
+     * (storage/app/public/catalogs → diakses lewat route download, bukan link langsung).
+     */
+    private const CATALOG_DIR = 'catalogs';
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN — dipakai oleh admin/sections/products-panel.blade.php
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * GET /visionasurance/products
+     * Semua produk, urut dari yang paling lama (urutan sama dengan slider di beranda).
+     */
+    public function getProducts()
+    {
+        $result = DB::table('products')->orderBy('id')->get();
+
         return response()->json($result, 200);
     }
 
-    public function createProducts(Request $request){
+    /**
+     * POST /visionasurance/create-products
+     * Field: image_url_left, image_url_top, text_title, text_desc, catalog_file (opsional, PDF)
+     */
+    public function createProducts(Request $request)
+    {
+        $request->validate([
+            'image_url_left' => 'required|file|mimes:jpg,jpeg,png,webp|max:10240',
+            'image_url_top'  => 'required|file|mimes:jpg,jpeg,png,webp|max:10240',
+            'text_title'     => 'required|string|max:255',
+            'text_desc'      => 'required|string',
+            'catalog_file'   => 'nullable|file|mimes:pdf|max:20480',
+        ], $this->messages());
 
-        if(!$request->hasFile('image_url_left')){
-            return response()->json(['message' => "Gambar banner kiri harus diunggah!"]);
+        $title = trim($request->input('text_title'));
+
+        $data = [
+            'image_url_left' => $this->convertToWebp($request->file('image_url_left')),
+            'image_url_top'  => $this->convertToWebp($request->file('image_url_top')),
+            'text_title'     => $title,
+            'text_desc'      => $request->input('text_desc'),
+            'catalog_url'    => null,
+            'catalog_name'   => null,
+        ];
+
+        if ($request->hasFile('catalog_file')) {
+            $data = array_merge($data, $this->storeCatalog($request->file('catalog_file'), $title));
         }
-        if(!$request->hasfile('image_url_top')){
-            return response()->json(['message' => "Gambar banner atas harus diunggah!"]);
-        }
-        if(!$request->filled('text_title')){
-            return response()->json(['message' => "Text Judul harus diisi!"]);
-        }
-        if(!$request->filled('text_desc')){
-            return response()->json(['message' => "Text deskripsi harus diisi!"]);
-        }
 
-        $image_left = $this->convertToWebp($request->file('inmage_url_left'));
-        $image_top = $this->convertToWebp($request->file('image_url_top'));
-        $text_title = $request->input('text_title');
-        $text_desc = $request->input('text_desc');
+        $id = DB::table('products')->insertGetId($data);
 
-        $result = DB::table('products')->insert([
-            'image_url_left' => $image_left,
-            'image_url_top' => $image_top,
-            'text_title' => $text_title,
-            'text_desc' => $text_desc
-        ]);
-
-        return response()->json($result, 200);
-
+        return response()->json([
+            'message' => 'Produk berhasil ditambahkan.',
+            'id'      => $id,
+        ], 201);
     }
 
-    public function editProducts(Request $request){
-        
+    /**
+     * POST /visionasurance/update-products
+     * Field: id (wajib) + field apa saja yang ingin diubah.
+     * Katalog baru otomatis menggantikan yang lama. Kirim remove_catalog=1 untuk menghapus katalog.
+     */
+    public function editProducts(Request $request)
+    {
+        $request->validate([
+            'id'             => 'required|integer|exists:products,id',
+            'image_url_left' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:10240',
+            'image_url_top'  => 'nullable|file|mimes:jpg,jpeg,png,webp|max:10240',
+            'text_title'     => 'nullable|string|max:255',
+            'text_desc'      => 'nullable|string',
+            'catalog_file'   => 'nullable|file|mimes:pdf|max:20480',
+        ], $this->messages());
+
+        $id      = (int) $request->input('id');
+        $product = DB::table('products')->where('id', $id)->first();
+
         $toUpdate = [];
 
-        if($request->hasfile('image_url_left')){
-            $image_left = $this->convertToWebp($request->file('inmage_url_left'));
-            $toUpdate['image_url_left'] = $image_left;
-        }
-        if($request->hasfile('image_url_top')){
-            $image_top = $this->convertToWebp($request->file('inmage_url_top'));
-            $toUpdate['image_url_left'] = $image_top;
-        }
-        if($request->filled('text_title')){
-            $text_title = $request->input('text_title');
-            $toUpdate['text_title'] = $text_title;
-        }
-        if($request->filled('text_desc')){
-            $text_desc = $request->input('text_desc');
-            $toUpdate['text_desc'] = $text_desc;
-        }
-        
-
-        if(count($toUpdate) === 0){
-            return response()->json('Tidak ada data yang diperbarui!', 400);
-        }else{
-            $result = DB::table('products')->update($toUpdate);
-            return response()->json($result, 200);
+        if ($request->hasFile('image_url_left')) {
+            $this->deleteFile($product->image_url_left);
+            $toUpdate['image_url_left'] = $this->convertToWebp($request->file('image_url_left'));
         }
 
+        if ($request->hasFile('image_url_top')) {
+            $this->deleteFile($product->image_url_top);
+            $toUpdate['image_url_top'] = $this->convertToWebp($request->file('image_url_top'));
+        }
+
+        if ($request->filled('text_title')) {
+            $toUpdate['text_title'] = trim($request->input('text_title'));
+        }
+
+        if ($request->filled('text_desc')) {
+            $toUpdate['text_desc'] = $request->input('text_desc');
+        }
+
+        // Ganti katalog ATAU hapus katalog
+        if ($request->hasFile('catalog_file')) {
+            $this->deleteFile($product->catalog_url);
+
+            $title    = $toUpdate['text_title'] ?? $product->text_title;
+            $toUpdate = array_merge($toUpdate, $this->storeCatalog($request->file('catalog_file'), $title));
+        } elseif ($request->boolean('remove_catalog')) {
+            $this->deleteFile($product->catalog_url);
+
+            $toUpdate['catalog_url']  = null;
+            $toUpdate['catalog_name'] = null;
+        }
+
+        if (count($toUpdate) === 0) {
+            return response()->json(['message' => 'Tidak ada data yang diperbarui!'], 422);
+        }
+
+        DB::table('products')->where('id', $id)->update($toUpdate);
+
+        return response()->json(['message' => 'Produk berhasil diperbarui.'], 200);
     }
 
+    /**
+     * POST /visionasurance/delete-products
+     * Field: id. File gambar & katalog milik produk ikut dihapus.
+     */
+    public function deleteProducts(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:products,id',
+        ], $this->messages());
+
+        $id      = (int) $request->input('id');
+        $product = DB::table('products')->where('id', $id)->first();
+
+        $this->deleteFile($product->image_url_left);
+        $this->deleteFile($product->image_url_top);
+        $this->deleteFile($product->catalog_url);
+
+        DB::table('products')->where('id', $id)->delete();
+
+        return response()->json(['message' => 'Produk berhasil dihapus.'], 200);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PUBLIK — halaman detail & unduh katalog
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * GET /produk/{id?}
+     * Menampilkan HANYA produk yang dipilih. Tanpa {id} → produk pertama.
+     */
+    public function showDetail($id = null)
+    {
+        if ($id !== null) {
+            $product = DB::table('products')->where('id', $id)->first();
+            abort_if(!$product, 404);
+        } else {
+            $product = DB::table('products')->orderBy('id')->first();
+        }
+
+        return view('public.sections.detail-products', [
+            'product'    => $product,
+            'standalone' => true,
+        ]);
+    }
+
+    /**
+     * GET /produk/{id}/katalog
+     * Mengunduh katalog PDF terbaru milik produk (selalu file yang sedang aktif).
+     */
+    public function downloadCatalog($id)
+    {
+        $product = DB::table('products')->where('id', $id)->first();
+
+        abort_if(!$product || empty($product->catalog_url), 404);
+
+        $path = $this->normalizePath($product->catalog_url);
+
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        $name = trim((string) $product->catalog_name);
+
+        if ($name === '') {
+            $name = Str::slug($product->text_title ?: 'katalog') . '.pdf';
+        }
+
+        return Storage::disk('public')->download($path, $name);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helper
+    |--------------------------------------------------------------------------
+    */
+
+    /** Simpan PDF ke storage/app/public/catalogs, kembalikan kolom untuk database. */
+    private function storeCatalog($file, string $title): array
+    {
+        $filename = Str::slug($title ?: 'katalog') . '-' . time() . '.pdf';
+        $path     = $file->storeAs(self::CATALOG_DIR, $filename, 'public');
+
+        return [
+            'catalog_url'  => $path,
+            'catalog_name' => $file->getClientOriginalName(),
+        ];
+    }
+
+    /** Hapus file lama dari disk "public" (aman bila file tidak ada / berupa URL luar). */
+    private function deleteFile(?string $path): void
+    {
+        $path = trim((string) $path);
+
+        if ($path === '' || preg_match('#^https?://#', $path)) {
+            return;
+        }
+
+        try {
+            Storage::disk('public')->delete($this->normalizePath($path));
+        } catch (\Throwable $e) {
+            // abaikan: file lama yang gagal dihapus tidak boleh menggagalkan proses simpan
+        }
+    }
+
+    /** "storage/catalogs/x.pdf" atau "/catalogs/x.pdf" → "catalogs/x.pdf" */
+    private function normalizePath(string $path): string
+    {
+        return ltrim(preg_replace('#^/?storage/#', '', trim($path)), '/');
+    }
+
+    private function messages(): array
+    {
+        return [
+            'id.required'              => 'ID produk tidak ditemukan.',
+            'id.exists'                => 'Produk tidak ditemukan.',
+            'image_url_left.required'  => 'Gambar banner kiri harus diunggah!',
+            'image_url_left.mimes'     => 'Banner kiri harus berformat JPG, PNG, atau WEBP.',
+            'image_url_left.max'       => 'Ukuran banner kiri maksimal 10 MB.',
+            'image_url_top.required'   => 'Gambar banner atas harus diunggah!',
+            'image_url_top.mimes'      => 'Banner atas harus berformat JPG, PNG, atau WEBP.',
+            'image_url_top.max'        => 'Ukuran banner atas maksimal 10 MB.',
+            'text_title.required'      => 'Text Judul harus diisi!',
+            'text_title.max'           => 'Judul maksimal 255 karakter.',
+            'text_desc.required'       => 'Text deskripsi harus diisi!',
+            'catalog_file.mimes'       => 'Katalog harus berupa file PDF.',
+            'catalog_file.max'         => 'Ukuran katalog maksimal 20 MB.',
+            'catalog_file.uploaded'    => 'Katalog gagal diunggah. Periksa batas upload_max_filesize di server.',
+        ];
+    }
 }

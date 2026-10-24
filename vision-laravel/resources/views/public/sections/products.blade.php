@@ -5,24 +5,60 @@
     - Judul, deskripsi, panah kiri/kanan, dan tombol "Pelajari Lebih" di bawah slider
     - Logika slider (rel, go, prev, next, panelStyle, swipe, keyboard) tetap sama
     - Scroll margin menggunakan pixel agar posisi navigasi header lebih presisi
+    - DATA DINAMIS: diambil dari tabel `products` (diisi lewat admin panel)
 --}}
 
 @php
-    $detailUrl = \Illuminate\Support\Facades\Route::has('products.detail')
-        ? route('products.detail')
-        : url('/produk');
+    // Path gambar dari database → URL (sama seperti helper di sub page lain)
+    $imageSrc = function (?string $path): string {
+        $p = trim((string) $path);
 
-    // Data dari config/products.php: hanya ambil yang dibutuhkan slider.
-    // Link menuju halaman detail dan langsung scroll ke produk yang dipilih (#slug).
-    $products = collect(config('products', []))
-        ->map(fn ($p) => [
-            'name'        => $p['name'],
-            'description' => $p['description'],
-            'image'       => asset($p['image']),
-            'link'        => $detailUrl . '#' . $p['slug'],
-        ])
+        if ($p === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#', $p) || str_starts_with($p, '/')) {
+            return $p;
+        }
+
+        if (
+            str_starts_with($p, 'storage/') ||
+            str_starts_with($p, 'images/') ||
+            str_starts_with($p, 'uploads/')
+        ) {
+            return url($p);
+        }
+
+        return url('storage/' . $p);
+    };
+
+    // Data dari tabel `products`: hanya ambil yang dibutuhkan slider.
+    // "Pelajari Lebih" menuju halaman detail HANYA untuk produk yang dipilih (/produk/{id}).
+    $products = \Illuminate\Support\Facades\DB::table('products')
+        ->orderBy('id')
+        ->get()
+        ->map(function ($p) use ($imageSrc) {
+            // Deskripsi singkat: paragraf pertama, dipotong agar slider tetap ringkas
+            $firstParagraph = preg_split('/\R{2,}/', trim((string) $p->text_desc))[0] ?? '';
+            $short = \Illuminate\Support\Str::limit(
+                trim(preg_replace('/\s+/', ' ', $firstParagraph)),
+                170
+            );
+
+            return [
+                'id'          => $p->id,
+                'name'        => $p->text_title,
+                'description' => $short,
+                'image'       => $imageSrc($p->image_url_left),
+                'link'        => \Illuminate\Support\Facades\Route::has('products.detail')
+                    ? route('products.detail', ['id' => $p->id])
+                    : url('/produk/' . $p->id),
+            ];
+        })
         ->values()
         ->all();
+
+    $productCount = count($products);
 @endphp
 
 <style>
@@ -39,9 +75,22 @@
     }
 </style>
 
+@if ($productCount === 0)
+
+    {{-- Belum ada produk (admin belum menambahkan) --}}
+    <section id="products" class="relative overflow-hidden bg-white pb-16 pt-28 lg:pb-20 lg:pt-32">
+        <div class="mx-auto max-w-3xl px-6 text-center">
+            <div class="rounded-[2rem] border-2 border-dashed border-[#6BB0FF]/60 bg-white/70 py-16">
+                <p class="text-sm font-medium text-[#1B2F8F]">Produk layanan akan segera hadir.</p>
+            </div>
+        </div>
+    </section>
+
+@else
+
 <section
     x-data="{
-        active: 2,
+        active: Math.min(2, {{ $productCount }} - 1),
         items: @js($products),
         jumping: [],
         jumpTimer: null,
@@ -170,7 +219,7 @@
                 }
             "
         >
-            <template x-for="(item, i) in items" :key="i">
+            <template x-for="(item, i) in items" :key="item.id">
                 <button
                     type="button"
                     @click="go(i)"
@@ -216,11 +265,12 @@
 
             <div class="flex items-start justify-between gap-3 sm:gap-6">
 
-                {{-- Prev --}}
+                {{-- Prev (disembunyikan bila hanya ada 1 produk) --}}
                 <button
                     @click="prev()"
                     type="button"
                     aria-label="Produk sebelumnya"
+                    :class="total > 1 ? '' : 'invisible'"
                     class="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
                 >
                     <svg
@@ -240,7 +290,7 @@
 
                     {{-- Judul --}}
                     <div class="grid">
-                        <template x-for="(item, i) in items" :key="'title-' + i">
+                        <template x-for="(item, i) in items" :key="'title-' + item.id">
                             <h2
                                 x-show="active === i"
                                 x-transition:enter="transition duration-300 ease-out"
@@ -257,7 +307,7 @@
 
                     {{-- Deskripsi --}}
                     <div class="mx-auto mt-3 grid max-w-md">
-                        <template x-for="(item, i) in items" :key="'desc-' + i">
+                        <template x-for="(item, i) in items" :key="'desc-' + item.id">
                             <p
                                 x-show="active === i"
                                 x-transition:enter="transition duration-300 ease-out"
@@ -282,11 +332,12 @@
 
                 </div>
 
-                {{-- Next --}}
+                {{-- Next (disembunyikan bila hanya ada 1 produk) --}}
                 <button
                     @click="next()"
                     type="button"
                     aria-label="Produk berikutnya"
+                    :class="total > 1 ? '' : 'invisible'"
                     class="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
                 >
                     <svg
@@ -306,3 +357,5 @@
         </div>
     </div>
 </section>
+
+@endif

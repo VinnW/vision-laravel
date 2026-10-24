@@ -35,6 +35,8 @@ Route::middleware('web')->prefix('visionasurance')->group(function () {
 | ADMIN API
 |--------------------------------------------------------------------------
 | Endpoint data yang dipakai Dashboard Admin.
+| CATATAN: file ini otomatis diberi awalan /api oleh Laravel,
+| jadi URL aslinya: /api/visionasurance/...
 |--------------------------------------------------------------------------
 */
 
@@ -68,9 +70,10 @@ Route::middleware(['web', 'auth:admin'])
             Route::put('/update-coming-up-next-content', 'updateContent');
 
         });
-        
 
-        /* Coming Up Next */
+
+        /* Products */
+        /* Semua memakai POST karena membawa file (gambar & PDF) lewat FormData. */
 
         Route::controller(ProductsController::class)->group(function () {
 
@@ -78,7 +81,9 @@ Route::middleware(['web', 'auth:admin'])
 
             Route::post('/create-products', 'createProducts');
 
-            Route::put('/update-products', 'updateProducts');
+            Route::post('/update-products', 'editProducts');
+
+            Route::post('/delete-products', 'deleteProducts');
 
         });
 

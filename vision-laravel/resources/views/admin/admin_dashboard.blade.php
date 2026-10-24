@@ -14,6 +14,11 @@
         @include('admin.sections.events-panel')
     </div>
 
+    {{-- Products Panel --}}
+    <div x-show="panel === 'products'" x-cloak>
+        @include('admin.sections.products-panel')
+    </div>
+
     {{-- User Panel (belum tersedia) --}}
     <div x-show="panel === 'user'" x-cloak>
         <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-20 text-center">

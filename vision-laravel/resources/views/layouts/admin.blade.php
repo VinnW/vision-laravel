@@ -40,9 +40,10 @@
 
         @php
             $nav = [
-                ['label' => 'Home Panel',  'panel' => 'home',  'active' => true],
-                ['label' => 'Event Panel', 'panel' => 'event', 'active' => true],
-                ['label' => 'User Panel',  'panel' => 'user',  'active' => false],
+                ['label' => 'Home Panel',     'panel' => 'home',     'active' => true],
+                ['label' => 'Event Panel',    'panel' => 'event',    'active' => true],
+                ['label' => 'Products Panel', 'panel' => 'products', 'active' => true],
+                ['label' => 'User Panel',     'panel' => 'user',     'active' => false],
             ];
         @endphp
 
@@ -98,9 +99,10 @@ function adminShell() {
     const KEY = 'admin.panel';
 
     const titles = {
-        home:  'Home Panel',
-        event: 'Event Panel',
-        user:  'User Panel'
+        home:     'Home Panel',
+        event:    'Event Panel',
+        products: 'Products Panel',
+        user:     'User Panel'
     };
 
     let saved = 'home';

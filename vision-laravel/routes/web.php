@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AdminLoginController;
+use App\Http\Controllers\ProductsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,19 +57,29 @@ Route::get('/agent/login', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Detail Produk Layanan
+| Join Agent
 |--------------------------------------------------------------------------
-| Data dari config/products.php (sumber yang sama dengan slider di
-| products.blade.php). Link dari slider: /produk#slug-produk
+| Tujuan tombol "Join Agent" di hero (route('join-agent')).
 */
-Route::get('/produk', function () {
+Route::get('/join-agent', function () {
+    return view('public.sections.join-agent');
+})->name('join-agent');
 
-    return view('public.sections.detail-products', [
-        'products' => collect(config('products', [])),
-        'standalone' => true,
-    ]);
+/*
+|--------------------------------------------------------------------------
+| Detail Produk Layanan (dinamis dari tabel `products`)
+|--------------------------------------------------------------------------
+| /produk/{id}         → HANYA produk yang diklik lewat "Pelajari Lebih"
+| /produk              → tanpa id: menampilkan produk pertama
+| /produk/{id}/katalog → mengunduh katalog PDF terbaru produk tersebut
+*/
+Route::get('/produk/{id?}', [ProductsController::class, 'showDetail'])
+    ->whereNumber('id')
+    ->name('products.detail');
 
-})->name('products.detail');
+Route::get('/produk/{id}/katalog', [ProductsController::class, 'downloadCatalog'])
+    ->whereNumber('id')
+    ->name('products.catalog');
 
 Route::get('/service', function () {
     return view('public.service');
