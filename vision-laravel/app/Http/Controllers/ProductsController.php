@@ -6,6 +6,7 @@ use App\Traits\ConvertsToWebp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 class ProductsController
@@ -185,7 +186,7 @@ class ProductsController
      * GET /produk/{id}/katalog
      * Mengunduh katalog PDF terbaru milik produk (selalu file yang sedang aktif).
      */
-    public function downloadCatalog($id)
+    public function downloadCatalog(int $id)
     {
         $product = DB::table('products')->where('id', $id)->first();
 
@@ -201,7 +202,10 @@ class ProductsController
             $name = Str::slug($product->text_title ?: 'katalog') . '.pdf';
         }
 
-        return Storage::disk('public')->download($path, $name);
+        return response()->download(
+            Storage::disk('public')->path($path),
+            $name
+        );
     }
 
 
@@ -212,7 +216,7 @@ class ProductsController
     */
 
     /** Simpan PDF ke storage/app/public/catalogs, kembalikan kolom untuk database. */
-    private function storeCatalog($file, string $title): array
+    private function storeCatalog(UploadedFile $file, string $title): array
     {
         $filename = Str::slug($title ?: 'katalog') . '-' . time() . '.pdf';
         $path     = $file->storeAs(self::CATALOG_DIR, $filename, 'public');
