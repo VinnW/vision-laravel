@@ -9,7 +9,9 @@ use App\Http\Controllers\{
     EventsController,
     AgentPageEditController,
     AgentLoginController,
-    ProductsController
+    ProductsController,
+    JoinAgentController,
+    CreateAgentController
 };
 
 
@@ -141,6 +143,29 @@ Route::middleware(['web', 'auth:admin'])
             Route::put('/agent-edit/{username}', 'editAgent');
 
             Route::delete('/agent-delete/{username}', 'deleteAgent');
+
+        });
+
+
+        Route::controller(JoinAgentController::class)->group(function () {
+
+            Route::get('/join-agent', 'getForm');
+
+            Route::post('/join-agent-form', 'submitForm');
+
+            Route::delete('/delete-join-agent-form/{username}', 'deleteForm');
+
+        });
+
+        Route::controller(CreateAgentController::class)->group(function () {
+
+            Route::get('/agents', 'getAgents');
+
+            Route::post('/create-agents', 'createAgent');
+
+            Route::put('/reset-password-agent/{username}', 'resetPasswordAgent');
+
+            Route::delete('/delete-agents', 'deleteAgent');
 
         });
 
