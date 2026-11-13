@@ -65,6 +65,10 @@ Route::get('/join-agent', function () {
     return view('public.sections.join-agent');
 })->name('join-agent');
 
+Route::get('/agent-preview', function () {
+    return view('agent.agent_dashboard');
+})->name('agent.preview');
+
 /*
 |--------------------------------------------------------------------------
 | Detail Produk Layanan (dinamis dari tabel `products`)
