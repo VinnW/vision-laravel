@@ -12,6 +12,9 @@
     |   $formAction   → URL tujuan form. Default: route('join-agent.submit') jika ada.
     |   $showHeader   → true untuk menampilkan header navigasi (default: false,
     |                   karena ini sub page).
+    |
+    | Form dikirim lewat fetch (JSON) ke JoinAgentController@submitForm
+    | dengan field: nama, email, kota, no_telepon, pesan.
     */
 
     $standalone ??= true;
@@ -165,34 +168,32 @@
                     Join Agent
                 </h2>
 
-                {{-- Notifikasi sukses (aktif setelah form disambungkan ke controller) --}}
-                @if (session('success'))
-                    <div class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                        {{ session('success') }}
-                    </div>
-                @endif
+                {{-- Notifikasi sukses / gagal (diisi lewat JavaScript) --}}
+                <div id="join-agent-success" role="status" aria-live="polite" hidden
+                     class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"></div>
+
+                <div id="join-agent-error" role="alert" hidden
+                     class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"></div>
 
                 <form
+                    id="join-agent-form"
                     action="{{ $formAction }}"
                     method="POST"
                     class="mt-4 space-y-3.5"
+                    novalidate
                 >
                     @csrf
 
                     {{-- Nama --}}
                     <div>
-                        <label for="name" class="{{ $labelClass }}">Nama</label>
+                        <label for="nama" class="{{ $labelClass }}">Nama</label>
                         <input
                             type="text"
-                            name="name"
-                            id="name"
-                            value="{{ old('name') }}"
+                            name="nama"
+                            id="nama"
                             class="{{ $inputClass }}"
                             placeholder="Masukkan nama lengkap"
                         >
-                        @error('name')
-                            <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     {{-- Email --}}
@@ -202,66 +203,52 @@
                             type="email"
                             name="email"
                             id="email"
-                            value="{{ old('email') }}"
                             class="{{ $inputClass }}"
                             placeholder="nama@email.com"
                         >
-                        @error('email')
-                            <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     {{-- Kota --}}
                     <div>
-                        <label for="city" class="{{ $labelClass }}">Kota</label>
+                        <label for="kota" class="{{ $labelClass }}">Kota</label>
                         <input
                             type="text"
-                            name="city"
-                            id="city"
-                            value="{{ old('city') }}"
+                            name="kota"
+                            id="kota"
                             class="{{ $inputClass }}"
                             placeholder="Kota domisili"
                         >
-                        @error('city')
-                            <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     {{-- No Telepon --}}
                     <div>
-                        <label for="phone" class="{{ $labelClass }}">No Telepon</label>
+                        <label for="no_telepon" class="{{ $labelClass }}">No Telepon</label>
                         <input
                             type="tel"
-                            name="phone"
-                            id="phone"
-                            value="{{ old('phone') }}"
+                            name="no_telepon"
+                            id="no_telepon"
                             class="{{ $inputClass }}"
                             placeholder="08xxxxxxxxxx"
                         >
-                        @error('phone')
-                            <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     {{-- Pesan --}}
                     <div>
-                        <label for="message" class="{{ $labelClass }}">Pesan</label>
+                        <label for="pesan" class="{{ $labelClass }}">Pesan</label>
                         <textarea
-                            name="message"
-                            id="message"
+                            name="pesan"
+                            id="pesan"
                             rows="7"
                             class="{{ $inputClass }} resize-none"
                             placeholder="Ceritakan singkat latar belakang dan alasan Anda ingin bergabung"
-                        >{{ old('message') }}</textarea>
-                        @error('message')
-                            <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p>
-                        @enderror
+                        ></textarea>
                     </div>
 
                     {{-- Submit --}}
                     <button
                         type="submit"
-                        class="mt-2 inline-flex min-w-[7.5rem] items-center justify-center rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-10 py-2 text-sm font-medium text-white shadow-[0_12px_24px_-12px_rgba(27,52,120,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_-12px_rgba(27,52,120,0.85)]"
+                        id="join-agent-submit"
+                        class="mt-2 inline-flex min-w-[7.5rem] items-center justify-center rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-10 py-2 text-sm font-medium text-white shadow-[0_12px_24px_-12px_rgba(27,52,120,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_-12px_rgba(27,52,120,0.85)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                     >
                         Daftar
                     </button>
@@ -273,6 +260,76 @@
     </div>
 
 </section>
+
+<script>
+    (function () {
+        const form = document.getElementById('join-agent-form');
+        if (!form) return;
+
+        const btn = document.getElementById('join-agent-submit');
+        const okBox = document.getElementById('join-agent-success');
+        const errBox = document.getElementById('join-agent-error');
+        const CSRF = @js(csrf_token());
+
+        function show(box, msg) {
+            okBox.hidden = true;
+            errBox.hidden = true;
+            box.textContent = msg;
+            box.hidden = false;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Tanpa endpoint yang valid, jangan kirim apa pun
+            if (!form.action || form.getAttribute('action') === '#') {
+                show(errBox, 'Form belum terhubung ke server.');
+                return;
+            }
+
+            const payload = {
+                nama: form.nama.value.trim(),
+                email: form.email.value.trim(),
+                kota: form.kota.value.trim(),
+                no_telepon: form.no_telepon.value.trim(),
+                pesan: form.pesan.value.trim(),
+            };
+
+            btn.disabled = true;
+            const label = btn.textContent;
+            btn.textContent = 'Mengirim...';
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await res.json().catch(() => null);
+
+                if (!res.ok) {
+                    const msg = typeof data === 'string' ? data : (data && data.message) || 'Terjadi kesalahan. Coba lagi.';
+                    show(errBox, msg);
+                    return;
+                }
+
+                form.reset();
+                show(okBox, 'Terima kasih! Pengajuan Anda sudah kami terima dan akan segera kami hubungi.');
+            } catch (err) {
+                show(errBox, 'Tidak dapat terhubung ke server. Coba lagi.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = label;
+            }
+        });
+    })();
+</script>
 
 
 @if ($standalone)

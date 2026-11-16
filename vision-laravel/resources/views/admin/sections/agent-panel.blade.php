@@ -2,26 +2,22 @@
     User Panel (Admin) → isi menu "User Panel" di admin_dashboard
     Lokasi saran: resources/views/admin/sections/agent-panel.blade.php
     Pemakaian   : @include('admin.sections.agent-panel') di dalam area konten "User Panel"
-                  (judul "User Panel" di header sudah disediakan dashboard, jadi tidak diulang di sini)
 
-    Hanya ada 2 sub-menu di dalam User Panel:
-      1. Pengajuan Join Agent : melihat pesan dari calon agen
-      2. Akun Agen            : admin membuat username + password, reset password, nonaktifkan, hapus
+    Sub-menu:
+      1. Pengajuan Join Agent → JoinAgentController
+      2. Akun Agen            → CreateAgentController (tabel create_agent)
     Admin TIDAK mengedit profil agen (foto, nama, bio, WA). Itu hak agen sendiri.
 
-    ─── KONTRAK API (sesuaikan di objek `endpoints` pada script di bawah) ───
-    GET    applications        → [{ id, name, phone, email?, message?, status: 'new'|'contacted', created_at }]
-    PUT    application(id)     ← { status: 'contacted' }
-    DELETE application(id)
-    GET    agents              → [{ username, is_active: bool, profile_complete: bool, created_at }]
-    POST   createAgent         ← { username, password }       → 201 / 422 { message } bila username dipakai
-    POST   resetPassword(user) ← { password }
-    POST   toggleAgent(user)   ← { is_active: bool }
-    DELETE deleteAgent(user)
-    Respons list boleh berupa array langsung atau { data: [...] }.
+    ─── JoinAgentController ───
+    GET    /join-agent-forms            → getForm
+    DELETE /join-agent-forms/{id}       → deleteForm
+    Status "Sudah dihubungi" disimpan di localStorage browser admin.
 
-    useMock: true → memakai data contoh supaya tampilan bisa dilihat tanpa backend.
-    Ubah ke false bila endpoint sudah siap.
+    ─── CreateAgentController ───
+    GET    /create-agents                      → getAgents          [{ username, link_page, created_at? }]
+    POST   /create-agent                       → createAgent        ← { username, password, link_page }
+    POST   /create-agent/{username}/reset      → resetPasswordAgent (password dikosongkan oleh backend)
+    DELETE /create-agent/{username}            → deleteAgent
 --}}
 
 <script>
@@ -30,7 +26,7 @@
         const HOST = @js(parse_url(url('/'), PHP_URL_HOST));
         const LOGIN_URL = @js(url('/agent/login'));
         const CSRF = @js(csrf_token());
-        const API = '/api/visionasurance';
+        const CONTACTED_KEY = 'joinAgentContacted';
 
         const RESERVED = [
             'admin', 'login', 'logout', 'agent', 'agents', 'join-agent', 'joinagent', 'produk', 'products',
@@ -39,16 +35,14 @@
         ];
 
         return {
-            useMock: true,
-
             endpoints: {
-                applications:      API + '/agent-applications',
-                application:       id => API + '/agent-applications/' + id,
-                agents:            API + '/agents',
-                createAgent:       API + '/create-agent',
-                resetPassword:     u => API + '/agent-reset-password/' + u,
-                toggleAgent:       u => API + '/agent-toggle/' + u,
-                deleteAgent:       u => API + '/agent-delete/' + u,
+                applications:  @js(url('/join-agent-forms')),
+                application:   id => @js(url('/join-agent-forms')) + '/' + encodeURIComponent(id),
+
+                agents:        @js(url('/create-agents')),
+                createAgent:   @js(url('/create-agent')),
+                resetPassword: u => @js(url('/create-agent')) + '/' + encodeURIComponent(u) + '/reset',
+                deleteAgent:   u => @js(url('/create-agent')) + '/' + encodeURIComponent(u),
             },
 
             tab: 'applications',
@@ -56,6 +50,7 @@
             loadError: '',
             applications: [],
             agents: [],
+            contactedIds: [],
 
             form: { username: '', password: '' },
             showPassword: false,
@@ -63,7 +58,7 @@
             formError: '',
             created: null,
 
-            modal: null,        // { type: 'reset'|'delete-agent'|'delete-application', target, password }
+            modal: null,        // { type: 'reset'|'delete-agent'|'delete-application', target }
             modalBusy: false,
             modalError: '',
 
@@ -74,6 +69,7 @@
 
             /* ---------- lifecycle ---------- */
             async init() {
+                this.contactedIds = this.readContacted();
                 await this.load();
             },
 
@@ -81,28 +77,17 @@
                 this.loading = true;
                 this.loadError = '';
 
-                if (this.useMock) {
-                    this.applications = [
-                        { id: 1, name: 'Justine Wijaya', phone: '081234567890', email: 'justine@mail.com', message: 'Saya ingin bergabung sebagai agen. Sudah 3 tahun di bidang asuransi jiwa dan punya komunitas di Yogyakarta.', status: 'new', created_at: '2026-11-10T09:12:00' },
-                        { id: 2, name: 'Rani Kusuma', phone: '6285711112222', email: '', message: '', status: 'new', created_at: '2026-11-08T14:30:00' },
-                        { id: 3, name: 'Dimas Pratama', phone: '082233334444', email: 'dimas@mail.com', message: 'Tertarik jadi agen paruh waktu.', status: 'contacted', created_at: '2026-11-02T11:05:00' },
-                    ];
-                    this.agents = [
-                        { username: 'anindia', is_active: true, profile_complete: true, created_at: '2026-10-21T10:00:00' },
-                        { username: 'budisantoso', is_active: true, profile_complete: false, created_at: '2026-11-05T16:20:00' },
-                        { username: 'sarilestari', is_active: false, profile_complete: true, created_at: '2026-09-14T08:45:00' },
-                    ];
-                    this.loading = false;
-                    return;
-                }
-
                 try {
                     const [apps, agents] = await Promise.all([
                         this.api('GET', this.endpoints.applications),
                         this.api('GET', this.endpoints.agents),
                     ]);
-                    this.applications = Array.isArray(apps) ? apps : (apps && apps.data) || [];
-                    this.agents = Array.isArray(agents) ? agents : (agents && agents.data) || [];
+
+                    const appRows = Array.isArray(apps) ? apps : (apps && apps.data) || [];
+                    const agentRows = Array.isArray(agents) ? agents : (agents && agents.data) || [];
+
+                    this.applications = appRows.map(r => this.mapApplication(r));
+                    this.agents = agentRows.map(r => this.mapAgent(r));
                 } catch (e) {
                     this.loadError = e.message || 'Data tidak dapat dimuat.';
                 } finally {
@@ -129,6 +114,43 @@
                 }
 
                 return data;
+            },
+
+            /* ---------- mapping ---------- */
+            mapApplication(r) {
+                return {
+                    id: r.id,
+                    name: r.nama || '',
+                    phone: r.no_telepon || '',
+                    email: r.email || '',
+                    city: r.kota || '',
+                    message: r.pesan || '',
+                    status: this.contactedIds.includes(r.id) ? 'contacted' : 'new',
+                    created_at: r.created_at || null,
+                };
+            },
+
+            mapAgent(r) {
+                return {
+                    username: r.username,
+                    link_page: r.link_page || this.linkFor(r.username),
+                    created_at: r.created_at || null,
+                };
+            },
+
+            readContacted() {
+                try {
+                    const v = JSON.parse(localStorage.getItem(CONTACTED_KEY) || '[]');
+                    return Array.isArray(v) ? v : [];
+                } catch (e) {
+                    return [];
+                }
+            },
+
+            saveContacted() {
+                try {
+                    localStorage.setItem(CONTACTED_KEY, JSON.stringify(this.contactedIds));
+                } catch (e) {}
             },
 
             /* ---------- helpers ---------- */
@@ -213,19 +235,26 @@
                 this.submitting = true;
                 this.formError = '';
 
-                const payload = { username: this.form.username, password: this.form.password };
+                const payload = {
+                    username: this.form.username,
+                    password: this.form.password,
+                    link_page: this.linkFor(this.form.username),
+                };
 
                 try {
-                    if (!this.useMock) {
-                        await this.api('POST', this.endpoints.createAgent, payload);
+                    const res = await this.api('POST', this.endpoints.createAgent, payload);
+
+                    // CreateAgentController@createAgent mengembalikan [pesan, hasil_insert, 200]
+                    if (Array.isArray(res) && res[1] === false) {
+                        throw new Error('Akun gagal dibuat.');
                     }
 
-                    this.agents.unshift({ username: payload.username, is_active: true, profile_complete: false, created_at: new Date().toISOString() });
-                    this.created = { ...payload };
+                    this.agents.unshift(this.mapAgent({ username: payload.username, link_page: payload.link_page, created_at: new Date().toISOString() }));
+                    this.created = { username: payload.username, password: payload.password };
                     this.form = { username: '', password: '' };
                     this.showPassword = false;
                 } catch (e) {
-                    this.formError = e.message;
+                    this.formError = /duplicate/i.test(e.message) ? 'Username sudah dipakai agen lain.' : e.message;
                 } finally {
                     this.submitting = false;
                 }
@@ -245,31 +274,16 @@
             },
 
             /* ---------- aksi pengajuan ---------- */
-            async markContacted(app) {
-                try {
-                    if (!this.useMock) await this.api('PUT', this.endpoints.application(app.id), { status: 'contacted' });
-                    app.status = 'contacted';
-                    this.notify('Ditandai sudah dihubungi');
-                } catch (e) {
-                    this.notify(e.message);
-                }
-            },
-
-            /* ---------- aksi akun ---------- */
-            async toggleAgent(agent) {
-                const next = !agent.is_active;
-                try {
-                    if (!this.useMock) await this.api('POST', this.endpoints.toggleAgent(agent.username), { is_active: next });
-                    agent.is_active = next;
-                    this.notify(next ? 'Akun diaktifkan' : 'Akun dinonaktifkan');
-                } catch (e) {
-                    this.notify(e.message);
-                }
+            markContacted(app) {
+                if (!this.contactedIds.includes(app.id)) this.contactedIds.push(app.id);
+                this.saveContacted();
+                app.status = 'contacted';
+                this.notify('Ditandai sudah dihubungi');
             },
 
             /* ---------- modal ---------- */
             openModal(type, target) {
-                this.modal = { type, target, password: '' };
+                this.modal = { type, target };
                 this.modalError = '';
                 this.modalBusy = false;
             },
@@ -278,42 +292,44 @@
                 if (!this.modalBusy) this.modal = null;
             },
 
-            get modalValid() {
-                if (!this.modal) return false;
-                return this.modal.type !== 'reset' || this.modal.password.length >= 8;
-            },
-
-            generateModalPassword() {
-                const keep = this.form.password;
-                this.generatePassword();
-                this.modal.password = this.form.password;
-                this.form.password = keep;
-                this.showPassword = false;
-            },
-
             async confirmModal() {
-                if (!this.modalValid) return;
+                if (!this.modal) return;
                 const m = this.modal;
                 this.modalBusy = true;
                 this.modalError = '';
 
                 try {
                     if (m.type === 'reset') {
-                        if (!this.useMock) await this.api('POST', this.endpoints.resetPassword(m.target.username), { password: m.password });
-                        this.created = { username: m.target.username, password: m.password };
-                        this.tab = 'accounts';
+                        const res = await this.api('POST', this.endpoints.resetPassword(m.target.username));
+
+                        if (Array.isArray(res) && res[1] === 0) {
+                            throw new Error('Tidak ada data yang diubah.');
+                        }
+
                         this.notify('Password direset');
                     }
 
                     if (m.type === 'delete-agent') {
-                        if (!this.useMock) await this.api('DELETE', this.endpoints.deleteAgent(m.target.username));
+                        const res = await this.api('DELETE', this.endpoints.deleteAgent(m.target.username));
+
+                        if (Array.isArray(res) && res[1] === 0) {
+                            throw new Error('Tidak ada data yang terhapus.');
+                        }
+
                         this.agents = this.agents.filter(a => a.username !== m.target.username);
                         this.notify('Akun dihapus');
                     }
 
                     if (m.type === 'delete-application') {
-                        if (!this.useMock) await this.api('DELETE', this.endpoints.application(m.target.id));
+                        const res = await this.api('DELETE', this.endpoints.application(m.target.id));
+
+                        if (Array.isArray(res) && res[1] === 0) {
+                            throw new Error('Tidak ada data yang terhapus. Periksa deleteForm di JoinAgentController.');
+                        }
+
                         this.applications = this.applications.filter(a => a.id !== m.target.id);
+                        this.contactedIds = this.contactedIds.filter(id => id !== m.target.id);
+                        this.saveContacted();
                         this.notify('Pengajuan dihapus');
                     }
 
@@ -334,11 +350,6 @@
     @keydown.escape.window="closeModal()"
     class="space-y-6 text-slate-800"
 >
-
-    {{-- Penanda data contoh --}}
-    <div x-show="useMock" x-cloak class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-        Menampilkan data contoh. Ubah <code class="font-semibold">useMock</code> menjadi <code class="font-semibold">false</code> di agent-panel.blade.php bila endpoint sudah siap.
-    </div>
 
     {{-- Sub-menu --}}
     <div class="inline-flex rounded-xl border border-slate-200 bg-white p-1" role="tablist" aria-label="Sub-menu User Panel">
@@ -397,6 +408,7 @@
                         <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-slate-500">
                             <span x-text="app.phone"></span>
                             <span x-show="app.email" x-text="app.email"></span>
+                            <span x-show="app.city" x-text="app.city"></span>
                         </div>
                     </div>
 
@@ -533,28 +545,13 @@
             <template x-for="agent in agents" :key="agent.username">
                 <article class="rounded-2xl border border-slate-200 bg-white p-5">
 
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h4 class="text-base font-semibold text-slate-900" x-text="agent.username"></h4>
-                            <div class="mt-1 flex items-center gap-2">
-                                <a :href="linkFor(agent.username)" target="_blank" rel="noopener noreferrer"
-                                   class="break-all text-xs text-[#1B3478] hover:underline" x-text="shortLink(agent.username)"></a>
-                                <button type="button" @click="copy(linkFor(agent.username), 'Link')"
-                                        class="shrink-0 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50">Salin</button>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span
-                                x-text="agent.is_active ? 'Aktif' : 'Nonaktif'"
-                                :class="agent.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
-                                class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                            ></span>
-                            <span
-                                x-text="agent.profile_complete ? 'Profil lengkap' : 'Profil belum lengkap'"
-                                :class="agent.profile_complete ? 'bg-[#EEF1FF] text-[#1B3478]' : 'bg-amber-50 text-amber-700'"
-                                class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                            ></span>
+                    <div class="min-w-0">
+                        <h4 class="text-base font-semibold text-slate-900" x-text="agent.username"></h4>
+                        <div class="mt-1 flex items-center gap-2">
+                            <a :href="agent.link_page" target="_blank" rel="noopener noreferrer"
+                               class="break-all text-xs text-[#1B3478] hover:underline" x-text="shortLink(agent.username)"></a>
+                            <button type="button" @click="copy(agent.link_page, 'Link')"
+                                    class="shrink-0 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50">Salin</button>
                         </div>
                     </div>
 
@@ -562,11 +559,7 @@
                         <button type="button" @click="openModal('reset', agent)"
                                 class="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Reset password</button>
 
-                        <button type="button" @click="toggleAgent(agent)"
-                                class="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                x-text="agent.is_active ? 'Nonaktifkan' : 'Aktifkan'"></button>
-
-                        <span class="text-xs text-slate-400" x-text="'Dibuat ' + fmtDate(agent.created_at)"></span>
+                        <span x-show="agent.created_at" class="text-xs text-slate-400" x-text="'Dibuat ' + fmtDate(agent.created_at)"></span>
 
                         <button type="button" @click="openModal('delete-agent', agent)"
                                 class="ml-auto rounded-lg px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50">Hapus</button>
@@ -585,17 +578,11 @@
 
             <template x-if="modal && modal.type === 'reset'">
                 <div>
-                    <h3 class="text-base font-semibold text-slate-900">Reset password</h3>
+                    <h3 class="text-base font-semibold text-slate-900">Reset password?</h3>
                     <p class="mt-1 text-sm text-slate-500">
-                        Password baru untuk <span class="font-semibold text-slate-800" x-text="modal.target.username"></span>.
-                        Password lama tidak berlaku lagi.
+                        Password untuk <span class="font-semibold text-slate-800" x-text="modal.target.username"></span>
+                        akan dikosongkan dan password lama tidak berlaku lagi.
                     </p>
-                    <div class="mt-4 flex items-center gap-2">
-                        <input type="text" x-model="modal.password" placeholder="Minimal 8 karakter" autocomplete="off"
-                               class="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm focus:border-[#1B3478] focus:outline-none" />
-                        <button type="button" @click="generateModalPassword()"
-                                class="shrink-0 rounded-lg border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Acak</button>
-                    </div>
                 </div>
             </template>
 
@@ -605,7 +592,6 @@
                     <p class="mt-1 text-sm text-slate-500">
                         Akun <span class="font-semibold text-slate-800" x-text="modal.target.username"></span> dan halamannya
                         (<span x-text="shortLink(modal.target.username)"></span>) akan dihapus permanen.
-                        Untuk menutup sementara, gunakan Nonaktifkan.
                     </p>
                 </div>
             </template>
@@ -623,10 +609,10 @@
 
             <div class="mt-6 flex justify-end gap-2">
                 <button type="button" @click="closeModal()" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                <button type="button" @click="confirmModal()" :disabled="!modalValid || modalBusy"
+                <button type="button" @click="confirmModal()" :disabled="modalBusy"
                         :class="modal && modal.type === 'reset' ? 'bg-[#1B3478] hover:bg-[#10127A]' : 'bg-red-600 hover:bg-red-700'"
                         class="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                        x-text="modalBusy ? 'Memproses...' : (modal && modal.type === 'reset' ? 'Simpan password' : 'Hapus')"></button>
+                        x-text="modalBusy ? 'Memproses...' : (modal && modal.type === 'reset' ? 'Reset' : 'Hapus')"></button>
             </div>
         </div>
     </div>
