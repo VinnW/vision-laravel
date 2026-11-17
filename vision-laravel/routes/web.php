@@ -267,7 +267,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/join-agent-forms', [JoinAgentController::class, 'getForm'])
         ->name('join-agent.forms');
 
-    Route::delete('/join-agent-forms/{nama}', [JoinAgentController::class, 'deleteForm'])
+    Route::delete('/join-agent-forms/{username}', [JoinAgentController::class, 'deleteForm'])
         ->name('join-agent.forms.delete');
 
     // Akun Agen (dipakai agent-panel)
