@@ -18,11 +18,17 @@ class AgentPageEditController{
 
   public function editAgent(Request $request){
 
+    $username = session('agent_username');
+
+    if (!$username) {
+      return response()->json('Silakan login terlebih dahulu.', 401);
+    }
+
     $toUpdate = [];
 
     if($request->hasfile('image_url')){
       $image_url = $this->convertToWebp($request->file('image_url'));
-      $toUpdate['image_url'] = $image_url;
+      $toUpdate['image'] = $image_url;
     }
     if($request->filled('name')){
       $name = $request->input('name');
@@ -30,18 +36,18 @@ class AgentPageEditController{
     }
     if($request->filled('bio')){
       $bio = $request->input('bio');
-      $toUpdate['bio'] = $bio;
+      $toUpdate['description'] = $bio;
     }
     if($request->filled('wa_link')){
       $wa_link = $request->input('wa_link');
-      $toUpdate['wa_link'] = $wa_link;
+      $toUpdate['link_wa'] = $wa_link;
     }
 
     if (count($toUpdate) === 0) {
       return response()->json('Tidak ada data yang diperbarui!', 400);
     }
 
-    DB::table('agent_page_edit')->update($toUpdate);
+    DB::table('agent_page_edit')->where('username', $username)->update($toUpdate);
 
     return response()->json('Agent Page Berhasil Diperbarui!', 200);
 

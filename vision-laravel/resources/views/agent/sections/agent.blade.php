@@ -1,17 +1,15 @@
 {{--
     Halaman Agen (publik) → /{username}
-    Lokasi saran: resources/views/agent/sections/agent.blade.php
+    Lokasi: resources/views/agent/sections/agent.blade.php
 
     VARIABEL YANG DITERIMA (dikirim dari route/controller):
       $agent    : object { username, name, bio, image_url, wa_link }
       $isOwner  : bool   → true HANYA bila agen yang sedang login = pemilik halaman ini.
-                           Bar & tombol edit dirender di server hanya bila true,
-                           jadi customer tidak pernah menerima tombolnya di HTML.
       $editUrl  : (opsional) URL halaman edit
       $products : (opsional) array produk. Bila tidak dikirim, diambil dari tabel `products`
-                  dengan cara yang sama seperti products.blade.php
 
-    Section ini dipasang di dalam halaman yang sudah memuat header (seperti section lain di public.*).
+    Layout: 2 kolom. Foto penuh dari atas sampai bawah di kiri, konten di kanan.
+    Section ini dipasang di dalam halaman yang sudah memuat header.
 --}}
 
 @php
@@ -45,6 +43,7 @@
     $paragraphs  = preg_split('/\R{2,}/', trim((string) ($agent->bio ?? '')), -1, PREG_SPLIT_NO_EMPTY);
     $shareUrl    = url('/' . $username);
     $editUrl     = $editUrl ?? (Route::has('agent.edit') ? route('agent.edit') : url('/agent/edit'));
+    $productsUrl = Route::has('products') ? route('products') : url('/products');
 
     // Link WhatsApp: boleh tersimpan sebagai link penuh atau nomor (08xx / 628xx)
     $wa = trim((string) ($agent->wa_link ?? ''));
@@ -107,12 +106,12 @@
     }"
     x-init="$nextTick(() => update())"
     @resize.window.debounce.150ms="update()"
-    class="relative overflow-hidden bg-white pb-16 pt-28 lg:pb-24 lg:pt-32"
+    class="relative min-h-screen overflow-hidden bg-white"
 >
 
     {{-- Pola hexagon dekoratif (kanan bawah) --}}
     <svg
-        class="pointer-events-none absolute -right-10 bottom-0 hidden h-[28rem] w-[38rem] text-sky-200/70 md:block"
+        class="pointer-events-none absolute -right-10 bottom-0 hidden h-[30rem] w-[40rem] text-sky-200/70 md:block"
         aria-hidden="true"
         style="-webkit-mask-image: linear-gradient(to left, black 20%, transparent 95%); mask-image: linear-gradient(to left, black 20%, transparent 95%);"
     >
@@ -129,198 +128,206 @@
         <rect width="100%" height="100%" fill="url(#agent-hex-br)" />
     </svg>
 
-    <div class="relative mx-auto max-w-6xl px-6 lg:px-10">
+    <div class="relative grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
 
         {{-- ===================================================== --}}
-        {{-- BAR PEMILIK: hanya dirender bila agen yang login = pemilik halaman --}}
+        {{-- KOLOM KIRI: FOTO PENUH ATAS-BAWAH --}}
         {{-- ===================================================== --}}
-        @if ($isOwner)
-            <div class="mb-10 flex flex-col gap-4 rounded-2xl border-2 border-[#6BB0FF]/60 bg-[#EEF5FF] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="min-w-0">
-                    <p class="text-sm font-bold text-[#10127A]">Ini tampilan halaman Anda</p>
-                    <p class="mt-0.5 text-xs text-[#1B2F8F]">
-                        Bar ini hanya terlihat oleh Anda. Customer yang membuka link Anda tidak melihatnya.
-                    </p>
+        <div class="relative h-[26rem] w-full overflow-hidden bg-linear-to-br from-[#EDE7FB] via-[#E9F0FF] to-[#E3F2FB] sm:h-[32rem] lg:h-auto lg:min-h-screen">
+
+            @if ($photo !== '')
+                <img
+                    src="{{ $photo }}"
+                    alt="Foto {{ $displayName }}"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full object-cover object-top"
+                />
+            @else
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="h-28 w-28 text-slate-400/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
                 </div>
+            @endif
 
-                <div class="flex flex-wrap items-center gap-3">
-                    <button
-                        type="button"
-                        @click="copyLink()"
-                        class="rounded-full border-2 border-[#10127A] px-5 py-2 text-xs font-semibold text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
-                    >
-                        <span x-show="!copied">Salin link</span>
-                        <span x-show="copied" x-cloak>Link tersalin</span>
-                    </button>
+            {{-- Pudar putih di atas (area header) --}}
+            <div class="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-white/80 to-transparent" aria-hidden="true"></div>
 
-                    <a
-                        href="{{ $editUrl }}"
-                        class="rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-6 py-2 text-xs font-medium text-white shadow-[0_10px_22px_-10px_rgba(27,52,120,0.7)] transition-all duration-200 hover:-translate-y-0.5"
-                    >
-                        Edit profil
-                    </a>
-                </div>
-            </div>
-        @endif
-
-
-        {{-- ===================================================== --}}
-        {{-- PROFIL --}}
-        {{-- ===================================================== --}}
-        <div class="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-
-            {{-- Foto --}}
-            <div class="mx-auto w-full max-w-xs sm:max-w-sm">
-                <div class="relative aspect-4/5 overflow-hidden rounded-[2rem] border-4 border-[#6BB0FF] bg-slate-200 shadow-[0_20px_40px_-20px_rgba(30,64,175,0.35)]">
-                    @if ($photo !== '')
-                        <img
-                            src="{{ $photo }}"
-                            alt="Foto {{ $displayName }}"
-                            decoding="async"
-                            class="h-full w-full object-cover object-top"
-                        />
-                    @else
-                        <div class="flex h-full w-full items-center justify-center">
-                            <svg class="h-20 w-20 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4" />
-                                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
-                            </svg>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Teks --}}
-            <div class="min-w-0">
-
-                <h1 class="break-words text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-[#10127A] sm:text-5xl lg:text-[3.4rem]">
-                    <span class="inline-flex items-center gap-3">
-                        Halo
-                        <svg class="h-8 w-8 shrink-0 sm:h-10 sm:w-10" viewBox="0 0 24 24" role="img" aria-label="Agen terverifikasi">
-                            <circle cx="12" cy="12" r="11" fill="#2F8CFF" />
-                            <path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </span>
-                    <br>
-                    Saya {{ $displayName }}
-                </h1>
-
-                <p class="mt-3 text-base font-bold uppercase tracking-wide text-[#10127A] sm:text-lg">
-                    Official Trusted Agent Vision
-                </p>
-
-                <div class="mt-5 max-w-xl space-y-4 text-sm leading-relaxed text-slate-800">
-                    @forelse ($paragraphs as $para)
-                        <p class="whitespace-pre-line">{{ trim($para) }}</p>
-                    @empty
-                        @if ($isOwner)
-                            <p class="rounded-xl border-2 border-dashed border-[#6BB0FF]/60 px-4 py-3 text-[#1B2F8F]">
-                                Pengalaman Anda belum diisi. Tambahkan lewat tombol Edit profil.
-                            </p>
-                        @endif
-                    @endforelse
-                </div>
-
-            </div>
+            {{-- Pudar putih ke arah konten (desktop) --}}
+            <div class="pointer-events-none absolute inset-y-0 right-0 hidden w-24 bg-linear-to-r from-transparent to-white lg:block" aria-hidden="true"></div>
         </div>
 
 
         {{-- ===================================================== --}}
-        {{-- SLIDER PRODUK (3 kartu terlihat, geser untuk melihat sisanya) --}}
+        {{-- KOLOM KANAN: KONTEN --}}
         {{-- ===================================================== --}}
-        @if (count($products) > 0)
-            <div class="mt-14 lg:mt-16">
+        <div class="relative flex min-w-0 flex-col justify-center px-6 pb-16 pt-10 lg:px-12 lg:pb-16 lg:pt-32 xl:px-16">
 
-                <div
-                    x-ref="rail"
-                    @scroll.passive="update()"
-                    class="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                    @foreach ($products as $product)
-                        <a
-                            href="{{ $product['link'] }}"
-                            class="group relative aspect-4/3 w-[78%] shrink-0 snap-start overflow-hidden rounded-3xl border-4 border-[#6BB0FF] bg-slate-200 shadow-[0_20px_40px_-24px_rgba(30,64,175,0.35)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1E3A8A]/40 sm:w-[calc((100%-2rem)/3)]"
+            {{-- BAR PEMILIK: hanya dirender bila agen yang login = pemilik halaman --}}
+            @if ($isOwner)
+                <div class="mb-8 flex flex-col gap-4 rounded-2xl border-2 border-[#6BB0FF]/60 bg-[#EEF5FF] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-[#10127A]">Ini tampilan halaman Anda</p>
+                        <p class="mt-0.5 text-xs text-[#1B2F8F]">
+                            Bar ini hanya terlihat oleh Anda. Customer yang membuka link Anda tidak melihatnya.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button
+                            type="button"
+                            @click="copyLink()"
+                            class="rounded-full border-2 border-[#10127A] px-5 py-2 text-xs font-semibold text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95"
                         >
-                            @if (!empty($product['image']))
-                                <img
-                                    src="{{ $product['image'] }}"
-                                    alt="{{ $product['name'] }}"
-                                    loading="lazy"
-                                    decoding="async"
-                                    draggable="false"
-                                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                            @else
-                                <div class="flex h-full w-full items-center justify-center">
-                                    <svg class="h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <path d="m21 15-5-5-9 9" />
-                                    </svg>
-                                </div>
-                            @endif
+                            <span x-show="!copied">Salin link</span>
+                            <span x-show="copied" x-cloak>Link tersalin</span>
+                        </button>
 
-                            <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-white/95 via-white/70 to-transparent px-4 pb-3 pt-10">
-                                <p class="text-xs font-extrabold uppercase leading-tight text-[#10127A] sm:text-[13px]">
-                                    {{ $product['name'] }}
-                                </p>
-                            </div>
+                        <a
+                            href="{{ $editUrl }}"
+                            class="rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-6 py-2 text-xs font-medium text-white shadow-[0_10px_22px_-10px_rgba(27,52,120,0.7)] transition-all duration-200 hover:-translate-y-0.5"
+                        >
+                            Edit profil
                         </a>
-                    @endforeach
+                    </div>
                 </div>
+            @endif
 
-                {{-- Panah (hanya muncul bila produk lebih dari yang muat) --}}
-                <div x-show="canScroll" x-cloak class="mt-4 flex items-center justify-center gap-4">
-                    <button
-                        type="button"
-                        @click="move(-1)"
-                        :disabled="atStart"
-                        aria-label="Produk sebelumnya"
-                        class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#10127A]"
-                    >
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                    </button>
+            {{-- Judul --}}
+            <h1 class="break-words text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-[#10127A] sm:text-5xl lg:text-[3.4rem]">
+                <span class="inline-flex items-center gap-3">
+                    Halo
+                    <svg class="h-8 w-8 shrink-0 sm:h-10 sm:w-10" viewBox="0 0 24 24" role="img" aria-label="Agen terverifikasi">
+                        <circle cx="12" cy="12" r="11" fill="#2F8CFF" />
+                        <path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                <br>
+                Saya {{ $displayName }}
+            </h1>
 
-                    <button
-                        type="button"
-                        @click="move(1)"
-                        :disabled="atEnd"
-                        aria-label="Produk berikutnya"
-                        class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#10127A]"
-                    >
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                    </button>
-                </div>
-
-            </div>
-        @endif
-
-
-        {{-- ===================================================== --}}
-        {{-- AJAKAN KONSULTASI --}}
-        {{-- ===================================================== --}}
-        <div class="mt-10 max-w-xl">
-            <p class="text-sm font-medium leading-snug text-slate-800">
-                Konsultasikan kebutuhan asuransi Anda bersama saya.<br>
-                Hubungi saya di
+            <p class="mt-3 text-base font-bold uppercase tracking-wide text-[#10127A] sm:text-lg">
+                Official Trusted Agent Vision
             </p>
 
-            @if ($wa !== '')
-                <a
-                    href="{{ $wa }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mt-4 inline-flex items-center gap-2 rounded-full bg-linear-to-r from-[#2FA45A] to-[#1E8A47] px-9 py-3 text-sm font-medium text-white shadow-[0_10px_22px_-10px_rgba(30,138,71,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_-10px_rgba(30,138,71,0.8)]"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.3A8.4 8.4 0 1 1 21 11.5Z" /></svg>
-                    Hubungi Kami
-                </a>
-            @elseif ($isOwner)
-                <p class="mt-4 inline-block rounded-xl border-2 border-dashed border-[#6BB0FF]/60 px-4 py-3 text-xs text-[#1B2F8F]">
-                    Link WhatsApp belum diisi, tombol Hubungi Kami belum tampil untuk customer.
-                </p>
-            @endif
-        </div>
+            {{-- Bio --}}
+            <div class="mt-5 max-w-xl space-y-4 text-sm leading-relaxed text-slate-800">
+                @forelse ($paragraphs as $para)
+                    <p class="whitespace-pre-line">{{ trim($para) }}</p>
+                @empty
+                    @if ($isOwner)
+                        <p class="rounded-xl border-2 border-dashed border-[#6BB0FF]/60 px-4 py-3 text-[#1B2F8F]">
+                            Pengalaman Anda belum diisi. Tambahkan lewat tombol Edit profil.
+                        </p>
+                    @endif
+                @endforelse
+            </div>
 
+            {{-- Slider produk (3 kartu terlihat, geser untuk melihat sisanya) --}}
+            @if (count($products) > 0)
+                <div class="mt-8">
+<h2 class="mb-3 text-base font-extrabold uppercase tracking-wide text-[#10127A] sm:text-lg">
+            Produk Layanan
+        </h2>
+                    <div
+                        x-ref="rail"
+                        @scroll.passive="update()"
+                        class="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                        @foreach ($products as $product)
+                            <a
+                                href="{{ $product['link'] }}"
+                                class="group relative aspect-4/3 w-[70%] shrink-0 snap-start overflow-hidden rounded-2xl border-4 border-[#6BB0FF] bg-slate-200 shadow-[0_20px_40px_-24px_rgba(30,64,175,0.35)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1E3A8A]/40 sm:w-[calc((100%-1.5rem)/3)]"
+                            >
+                                @if (!empty($product['image']))
+                                    <img
+                                        src="{{ $product['image'] }}"
+                                        alt="{{ $product['name'] }}"
+                                        loading="lazy"
+                                        decoding="async"
+                                        draggable="false"
+                                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                @else
+                                    <div class="flex h-full w-full items-center justify-center">
+                                        <svg class="h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <rect x="3" y="3" width="18" height="14" rx="2" transform="translate(0 1)" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <path d="m21 15-5-5-9 9" />
+                                        </svg>
+                                    </div>
+                                @endif
+
+                                <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-white/95 via-white/70 to-transparent px-3 pb-2 pt-8">
+                                    <p class="text-[11px] font-extrabold uppercase leading-tight text-[#10127A] sm:text-xs">
+                                        {{ $product['name'] }}
+                                    </p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+
+                    {{-- Panah (hanya muncul bila produk lebih dari yang muat) --}}
+                    <div x-show="canScroll" x-cloak class="mt-3 flex items-center gap-3">
+                        <button
+                            type="button"
+                            @click="move(-1)"
+                            :disabled="atStart"
+                            aria-label="Produk sebelumnya"
+                            class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#10127A]"
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                        </button>
+
+                        <button
+                            type="button"
+                            @click="move(1)"
+                            :disabled="atEnd"
+                            aria-label="Produk berikutnya"
+                            class="flex h-7 w-7 items-center justify-center rounded-md border-2 border-[#10127A] text-[#10127A] transition-all duration-200 hover:bg-[#10127A] hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#10127A]"
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                        </button>
+                    </div>
+
+                </div>
+            @endif
+
+            {{-- Ajakan konsultasi --}}
+            <div class="mt-6 max-w-xl">
+                <p class="text-sm font-medium leading-snug text-slate-800">
+                    Konsultasikan kebutuhan asuransi Anda bersama saya.
+                </p>
+
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                    @if ($wa !== '')
+                        <a
+                            href="{{ $wa }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-[#2FA45A] to-[#1E8A47] px-8 py-2.5 text-sm font-medium text-white shadow-[0_10px_22px_-10px_rgba(30,138,71,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_-10px_rgba(30,138,71,0.8)]"
+                        >
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.3A8.4 8.4 0 1 1 21 11.5Z" /></svg>
+                            Hubungi Kami
+                        </a>
+                    @endif
+
+                    <!-- <a
+                        href="{{ $productsUrl }}"
+                        class="inline-flex items-center rounded-full bg-linear-to-r from-[#2F57A8] to-[#1B3478] px-8 py-2.5 text-sm font-medium text-white shadow-[0_10px_22px_-10px_rgba(27,52,120,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_26px_-10px_rgba(27,52,120,0.8)]"
+                    >
+                        Produk Layanan
+                    </a> -->
+                </div>
+
+                @if ($wa === '' && $isOwner)
+                    <p class="mt-4 inline-block rounded-xl border-2 border-dashed border-[#6BB0FF]/60 px-4 py-3 text-xs text-[#1B2F8F]">
+                        Link WhatsApp belum diisi, tombol Hubungi Kami belum tampil untuk customer.
+                    </p>
+                @endif
+            </div>
+
+        </div>
     </div>
 </section>

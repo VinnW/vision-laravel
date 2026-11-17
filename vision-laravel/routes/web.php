@@ -2,17 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Http\Controllers\AdminLoginController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\JoinAgentController;
 use App\Http\Controllers\CreateAgentController;
+use App\Http\Controllers\AgentPageEditController;
 
 /*
 |--------------------------------------------------------------------------
 | Helper: data Vision Update untuk halaman publik
 |--------------------------------------------------------------------------
-| Data yang sama dengan yang dikelola di vision-update-panel
-| (terbaru di atas, sesuai VisionUpdateController::getContent).
 */
 $visionUpdates = fn () => DB::table('vision_update_section')
     ->orderByDesc('id')
@@ -22,27 +23,14 @@ $visionUpdates = fn () => DB::table('vision_update_section')
 |--------------------------------------------------------------------------
 | Helper: data Coming Up Next untuk halaman publik
 |--------------------------------------------------------------------------
-| Hanya 1 baris (gambar, judul, deskripsi), null bila belum diisi.
 */
 $comingUpNext = fn () => DB::table('coming_up_next_section')->first();
 
 /*
 |--------------------------------------------------------------------------
-| Helper SEMENTARA: data agen contoh untuk preview tampilan
+| PUBLIK
 |--------------------------------------------------------------------------
-| Hanya dipakai route preview di bawah. Hapus bersama route preview
-| bila halaman agen sudah memakai data asli dari database.
-| Isi 'image_url' dengan path gambar (mis. 'storage/agents/foto.webp')
-| untuk melihat tampilan dengan foto.
 */
-$previewAgent = fn () => (object) [
-    'username'  => 'justinewijaya',
-    'name'      => 'Justine Wijaya',
-    'bio'       => "Dengan pengalaman dalam membantu kebutuhan perlindungan asuransi, saya telah melayani lebih dari 100 nasabah hingga saat ini dan menjadi mitra bagi banyak individu, keluarga, maupun profesional dalam merencanakan perlindungan mereka.\n\nDidukung oleh layanan yang profesional, responsif, dan personal, saya siap mendampingi setiap langkah mulai dari konsultasi, pemilihan perlindungan, hingga follow-up layanan dan pendampingan klaim.",
-    'image_url' => '',
-    'wa_link'   => '081234567890',
-];
-
 Route::get('/', function () {
 
     $slides = DB::table('home_section')
@@ -70,105 +58,18 @@ Route::get('/products', function () {
     return view('public.products');
 })->name('products');
 
-Route::get('/agent/login', function () {
-    return view('public.sections.agent-login');
-})->name('public.agent-login.page');
+Route::get('/service', function () {
+    return view('public.service');
+})->name('service');
 
-    // Akun Agen (dipakai agent-panel)
-    Route::get('/create-agents', [CreateAgentController::class, 'getAgents'])
-        ->name('create-agent.list');
-
-    Route::post('/create-agent', [CreateAgentController::class, 'createAgent'])
-        ->name('create-agent.store');
-
-    Route::post('/create-agent/{username}/reset', [CreateAgentController::class, 'resetPasswordAgent'])
-        ->name('create-agent.reset');
-
-    Route::delete('/create-agent/{username}', [CreateAgentController::class, 'deleteAgent'])
-        ->name('create-agent.delete');
-
-/*
-|--------------------------------------------------------------------------
-| Join Agent
-|--------------------------------------------------------------------------
-| Tujuan tombol "Join Agent" di hero (route('join-agent')).
-*/
-Route::get('/join-agent', function () {
-    return view('public.sections.join-agent');
-})->name('join-agent');
-
-Route::post('/join-agent', [JoinAgentController::class, 'submitForm'])
-    ->name('join-agent.submit');
-
-/*
-|--------------------------------------------------------------------------
-| AGENT (PREVIEW SEMENTARA, memakai data contoh)
-|--------------------------------------------------------------------------
-| Buka satu per satu untuk mengecek tampilan:
-|
-|   /agent-preview            → Dashboard agen
-|   /agent/dashboard          → Dashboard agen (alamat final yang dipakai tombol "Kembali")
-|   /agent/edit               → Halaman edit profil agen
-|   /agent-preview/page       → Halaman agen, tampilan PEMILIK (ada bar & tombol edit)
-|   /agent-preview/customer   → Halaman agen, tampilan CUSTOMER (tanpa tombol edit)
-|   /agent-preview/panel      → User Panel admin (harus login admin dulu)
-|
-| Nama route agent.edit & agent.dashboard sengaja dibuat sekarang karena
-| dipakai oleh tombol di view. Saat backend siap, ganti closure-nya dengan
-| controller + middleware agen, lalu hapus route /agent-preview/*.
-*/
-Route::get('/agent-preview', function () use ($previewAgent) {
-    return view('agent.agent_dashboard', [
-        'agent'      => $previewAgent(),
-        'previewUrl' => route('agent.preview.page'),
-    ]);
-})->name('agent.preview');
-
-Route::get('/agent/dashboard', function () use ($previewAgent) {
-    return view('agent.agent_dashboard', [
-        'agent'      => $previewAgent(),
-        'previewUrl' => route('agent.preview.page'),
-    ]);
-})->name('agent.dashboard');
-
-Route::get('/agent/edit', function () use ($previewAgent) {
-    return view('agent.preview', [
-        'section' => 'agent.sections.agent-edit',
-        'note'    => 'Edit profil agen (data contoh, tombol simpan belum terhubung ke agen yang login)',
-        'data'    => ['agent' => $previewAgent()],
-    ]);
-})->name('agent.edit');
-
-Route::get('/agent-preview/page', function () use ($previewAgent) {
-    return view('agent.preview', [
-        'section' => 'agent.sections.agent',
-        'note'    => 'Halaman agen, tampilan PEMILIK',
-        'data'    => ['agent' => $previewAgent(), 'isOwner' => true],
-    ]);
-})->name('agent.preview.page');
-
-Route::get('/agent-preview/customer', function () use ($previewAgent) {
-    return view('agent.preview', [
-        'section' => 'agent.sections.agent',
-        'note'    => 'Halaman agen, tampilan CUSTOMER (tanpa tombol edit)',
-        'data'    => ['agent' => $previewAgent(), 'isOwner' => false],
-    ]);
-})->name('agent.preview.customer');
-
-    // Pengajuan Join Agent (dipakai agent-panel)
-    Route::get('/join-agent-forms', [JoinAgentController::class, 'getForm'])
-        ->name('join-agent.forms');
-
-    Route::delete('/join-agent-forms/{username}', [JoinAgentController::class, 'deleteForm'])
-        ->name('join-agent.forms.delete');
+Route::get('/contact', function () {
+    return view('public.contact');
+})->name('contact');
 
 /*
 |--------------------------------------------------------------------------
 | Detail Produk Layanan (dinamis dari tabel `products`)
 |--------------------------------------------------------------------------
-| /produk/{id}         → HANYA produk yang diklik lewat "Pelajari Lebih"
-| /produk              → tanpa id: menampilkan produk pertama
-| /produk/{id}/katalog → mengunduh katalog PDF terbaru produk tersebut
 */
 Route::get('/produk/{id?}', [ProductsController::class, 'showDetail'])
     ->whereNumber('id')
@@ -177,10 +78,6 @@ Route::get('/produk/{id?}', [ProductsController::class, 'showDetail'])
 Route::get('/produk/{id}/katalog', [ProductsController::class, 'downloadCatalog'])
     ->whereNumber('id')
     ->name('products.catalog');
-
-Route::get('/service', function () {
-    return view('public.service');
-})->name('service');
 
 Route::get('/event', function () use ($visionUpdates) {
 
@@ -208,17 +105,149 @@ Route::get('/event/coming', function () use ($comingUpNext) {
 
 })->name('event.coming');
 
-Route::get('/contact', function () {
-    return view('public.contact');
-})->name('contact');
+/*
+|--------------------------------------------------------------------------
+| Join Agent
+|--------------------------------------------------------------------------
+*/
+Route::get('/join-agent', function () {
+    return view('public.sections.join-agent');
+})->name('join-agent');
 
+// Kirim form Join Agent. Sama seperti JoinAgentController@submitForm,
+// ditambah username otomatis (primary key join_agent), mis. justinewijaya-k3f9
+Route::post('/join-agent', function (\Illuminate\Http\Request $request) {
+
+    $fields = [
+        'nama'       => 'Nama',
+        'email'      => 'Email',
+        'kota'       => 'Kota',
+        'no_telepon' => 'No Telepon',
+        'pesan'      => 'Pesan',
+    ];
+
+    foreach ($fields as $field => $label) {
+        if (!$request->filled($field)) {
+            return response()->json($label . ' harus diisi!', 400);
+        }
+    }
+
+    if (!filter_var($request->input('email'), FILTER_VALIDATE_EMAIL)) {
+        return response()->json('Email tidak valid!', 400);
+    }
+
+    $base = Str::slug((string) $request->input('nama'), '');
+    $base = substr($base !== '' ? $base : 'calon', 0, 20);
+
+    do {
+        $username = $base . '-' . Str::lower(Str::random(4));
+    } while (DB::table('join_agent')->where('username', $username)->exists());
+
+    $hasil = DB::table('join_agent')->insert([
+        'username'   => $username,
+        'nama'       => $request->input('nama'),
+        'email'      => $request->input('email'),
+        'kota'       => $request->input('kota'),
+        'no_telepon' => $request->input('no_telepon'),
+        'pesan'      => $request->input('pesan'),
+    ]);
+
+    return response()->json(['Form berhasil di submit!', $hasil, 200]);
+
+})->name('join-agent.submit');
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN & EDIT AGEN
+|--------------------------------------------------------------------------
+*/
+Route::get('/agent/login', function () {
+    return view('public.sections.agent-login', [
+        'loginAction' => url('/agent/login'),
+    ]);
+})->name('public.agent-login.page');
+
+Route::post('/agent/login', function (\Illuminate\Http\Request $request) {
+
+    $username = strtolower(trim((string) $request->input('username')));
+    $password = (string) $request->input('password');
+
+    $agent  = DB::table('create_agent')->where('username', $username)->first();
+    $stored = (string) ($agent->password ?? '');
+
+    // Mendukung password hash (bcrypt) maupun teks biasa; password kosong (hasil reset) ditolak
+    $ok = $agent && $stored !== '' && $password !== '' && (
+        str_starts_with($stored, '$2y$')
+            ? Hash::check($password, $stored)
+            : hash_equals($stored, $password)
+    );
+
+    if (!$ok) {
+        return back()->withErrors(['username' => 'Username atau password salah.'])->onlyInput('username');
+    }
+
+    $request->session()->regenerate();
+    $request->session()->put('agent_username', $agent->username);
+
+    return redirect()->route('agent.edit');
+
+})->name('agent.login.web');
+
+Route::post('/agent/logout', function (\Illuminate\Http\Request $request) {
+    $request->session()->forget('agent_username');
+    $request->session()->regenerateToken();
+    return redirect()->route('public.agent-login.page');
+})->name('agent.logout');
+
+// Hanya agen yang sudah login
+Route::group([], function () {
+
+    $guard = function () {
+        if (!session('agent_username')) {
+            return request()->expectsJson()
+                ? response()->json('Silakan login terlebih dahulu.', 401)
+                : redirect()->route('public.agent-login.page');
+        }
+        return null;
+    };
+
+    Route::get('/agent/edit', function () use ($guard) {
+        if ($resp = $guard()) return $resp;
+
+        $username = session('agent_username');
+
+        // Pastikan baris profil agen ada
+        DB::table('agent_page_edit')->updateOrInsert(['username' => $username], []);
+
+        // Alias kolom tabel (description, image, link_wa) ke nama yang dipakai view
+        $agent = DB::table('agent_page_edit')
+            ->where('username', $username)
+            ->select(
+                'username',
+                'name',
+                'description as bio',
+                'image as image_url',
+                'link_wa as wa_link'
+            )
+            ->first();
+
+        return view('agent.edit', [
+            'agent'     => $agent,
+            'updateUrl' => url('/agent/edit'),
+            'backUrl'   => url('/' . $username),
+        ]);
+    })->name('agent.edit');
+
+    // Pengecekan login untuk simpan ada di AgentPageEditController@editAgent (401 bila belum login)
+    Route::put('/agent/edit', [AgentPageEditController::class, 'editAgent'])
+        ->name('agent.edit.update');
+});
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN
 |--------------------------------------------------------------------------
 */
-
 Route::get('/login', function () {
     return view('admin.login');
 })->name('admin.login.page');
@@ -234,14 +263,63 @@ Route::middleware('auth:admin')->group(function () {
     Route::view('/dashboard', 'admin.admin_dashboard')
         ->name('admin.dashboard');
 
-    // PREVIEW SEMENTARA: User Panel sebagai halaman penuh (hapus setelah di-include ke admin_dashboard)
+    // Pengajuan Join Agent (dipakai agent-panel)
+    Route::get('/join-agent-forms', [JoinAgentController::class, 'getForm'])
+        ->name('join-agent.forms');
+
+    Route::delete('/join-agent-forms/{nama}', [JoinAgentController::class, 'deleteForm'])
+        ->name('join-agent.forms.delete');
+
+    // Akun Agen (dipakai agent-panel)
+    Route::get('/create-agents', [CreateAgentController::class, 'getAgents'])
+        ->name('create-agent.list');
+
+    Route::post('/create-agent', [CreateAgentController::class, 'createAgent'])
+        ->name('create-agent.store');
+
+    Route::post('/create-agent/{username}/reset', [CreateAgentController::class, 'resetPasswordAgent'])
+        ->name('create-agent.reset');
+
+    Route::delete('/create-agent/{username}', [CreateAgentController::class, 'deleteAgent'])
+        ->name('create-agent.delete');
+
+    // PREVIEW SEMENTARA: User Panel sebagai halaman penuh
     Route::get('/agent-preview/panel', function () {
         return view('agent.preview', [
             'section'   => 'admin.sections.agent-panel',
-            'note'      => 'User Panel admin (data contoh)',
+            'note'      => 'User Panel admin',
             'bodyClass' => 'bg-slate-50',
             'data'      => [],
         ]);
     })->name('agent.preview.panel');
 
 });
+
+/*
+|--------------------------------------------------------------------------
+| Halaman Agen (publik) → /{username}
+|--------------------------------------------------------------------------
+| WAJIB di paling bawah file agar tidak menimpa route lain.
+*/
+Route::get('/{username}', function (string $username) {
+
+    $agent = DB::table('create_agent as c')
+        ->leftJoin('agent_page_edit as p', 'p.username', '=', 'c.username')
+        ->where('c.username', $username)
+        ->select(
+            'c.username',
+            'p.name',
+            'p.description as bio',
+            'p.image as image_url',
+            'p.link_wa as wa_link'
+        )
+        ->first();
+
+    abort_if(!$agent, 404);
+
+    return view('agent.page', [
+        'agent'   => $agent,
+        'isOwner' => session('agent_username') === $agent->username,
+    ]);
+
+})->where('username', '[a-z0-9]{3,30}')->name('agent.public');

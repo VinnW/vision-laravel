@@ -1,8 +1,8 @@
 {{--
     Header
     - Transparan di atas Hero (fixed), berubah putih blur saat di-scroll
-    - Logo kiri, menu tengah (biru), tombol Login gradasi + ikon globe di kanan
-    - Fungsi (route, dropdown bahasa, menu mobile) tidak diubah
+    - Logo kiri, menu tengah (biru), tombol Login/Logout gradasi + ikon globe di kanan
+    - Bila agen sudah login (session agent_username): tombol Login berubah jadi Logout
 --}}
 
 @php
@@ -21,6 +21,9 @@
     // Jika ada file logo di public/images/logo-vision.png, otomatis dipakai.
     $logoPath = 'images/logo-vision.png';
     $hasLogo = file_exists(public_path($logoPath));
+
+    // Status login agen
+    $agentLoggedIn = session()->has('agent_username');
 @endphp
 
 <header
@@ -77,13 +80,25 @@
         {{-- Right actions --}}
         <div class="hidden items-center gap-4 lg:flex">
 
-            {{-- Login --}}
-            <a
-                href="{{ route('public.agent-login.page') }}"
-                class="rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-9 py-2 text-sm font-medium text-white shadow-[0_8px_20px_-8px_rgba(46,111,216,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-8px_rgba(46,111,216,0.8)]"
-            >
-                Login
-            </a>
+            {{-- Login / Logout --}}
+            @if ($agentLoggedIn)
+                <form action="{{ route('agent.logout') }}" method="POST">
+                    @csrf
+                    <button
+                        type="submit"
+                        class="rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-9 py-2 text-sm font-medium text-white shadow-[0_8px_20px_-8px_rgba(46,111,216,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-8px_rgba(46,111,216,0.8)]"
+                    >
+                        Logout
+                    </button>
+                </form>
+            @else
+                <a
+                    href="{{ route('public.agent-login.page') }}"
+                    class="rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-9 py-2 text-sm font-medium text-white shadow-[0_8px_20px_-8px_rgba(46,111,216,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-8px_rgba(46,111,216,0.8)]"
+                >
+                    Login
+                </a>
+            @endif
 
             {{-- Language dropdown (ikon globe) --}}
             <div class="relative" @click.outside="langOpen = false">
@@ -155,9 +170,18 @@
             @endforeach
 
             <div class="mt-3 flex items-center gap-3 border-t border-slate-200/70 pt-4">
-                <a href="{{ route('public.agent-login.page') }}" class="flex-1 rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-5 py-2.5 text-center text-sm font-medium text-white">
-                    Login
-                </a>
+                @if ($agentLoggedIn)
+                    <form action="{{ route('agent.logout') }}" method="POST" class="flex-1">
+                        @csrf
+                        <button type="submit" class="w-full rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-5 py-2.5 text-center text-sm font-medium text-white">
+                            Logout
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('public.agent-login.page') }}" class="flex-1 rounded-full bg-linear-to-r from-[#2E6FD8] to-[#5BB4E8] px-5 py-2.5 text-center text-sm font-medium text-white">
+                        Login
+                    </a>
+                @endif
                 <button type="button" class="flex-1 rounded-full border border-[#2E6FD8]/40 px-5 py-2.5 text-sm font-semibold text-[#2E6FD8]">
                     Language
                 </button>

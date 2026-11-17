@@ -4,13 +4,13 @@
     Pemakaian   : @include('admin.sections.agent-panel') di dalam area konten "User Panel"
 
     Sub-menu:
-      1. Pengajuan Join Agent → JoinAgentController
+      1. Pengajuan Join Agent → JoinAgentController (tabel join_agent, primary key: username)
       2. Akun Agen            → CreateAgentController (tabel create_agent)
     Admin TIDAK mengedit profil agen (foto, nama, bio, WA). Itu hak agen sendiri.
 
     ─── JoinAgentController ───
-    GET    /join-agent-forms            → getForm
-    DELETE /join-agent-forms/{id}       → deleteForm
+    GET    /join-agent-forms               → getForm
+    DELETE /join-agent-forms/{username}    → deleteForm (username = pengenal otomatis dari saat pendaftaran)
     Status "Sudah dihubungi" disimpan di localStorage browser admin.
 
     ─── CreateAgentController ───
@@ -57,6 +57,7 @@
             submitting: false,
             formError: '',
             created: null,
+            fromApp: null,      // pengajuan yang sedang dijadikan akun
 
             modal: null,        // { type: 'reset'|'delete-agent'|'delete-application', target }
             modalBusy: false,
@@ -119,13 +120,13 @@
             /* ---------- mapping ---------- */
             mapApplication(r) {
                 return {
-                    id: r.id,
+                    id: r.username,
                     name: r.nama || '',
                     phone: r.no_telepon || '',
                     email: r.email || '',
                     city: r.kota || '',
                     message: r.pesan || '',
-                    status: this.contactedIds.includes(r.id) ? 'contacted' : 'new',
+                    status: this.contactedIds.includes(r.username) ? 'contacted' : 'new',
                     created_at: r.created_at || null,
                 };
             },
@@ -222,6 +223,7 @@
             },
 
             startAccountFrom(app) {
+                this.fromApp = app;
                 this.form.username = this.slug(app.name);
                 this.form.password = '';
                 this.created = null;
@@ -253,6 +255,21 @@
                     this.created = { username: payload.username, password: payload.password };
                     this.form = { username: '', password: '' };
                     this.showPassword = false;
+
+                    // Hapus pesan pengajuan asal akun ini
+                    if (this.fromApp) {
+                        const app = this.fromApp;
+                        this.fromApp = null;
+
+                        try {
+                            await this.api('DELETE', this.endpoints.application(app.id));
+                            this.applications = this.applications.filter(a => a.id !== app.id);
+                            this.contactedIds = this.contactedIds.filter(id => id !== app.id);
+                            this.saveContacted();
+                        } catch (e) {
+                            this.notify('Akun dibuat, tetapi pengajuan gagal dihapus.');
+                        }
+                    }
                 } catch (e) {
                     this.formError = /duplicate/i.test(e.message) ? 'Username sudah dipakai agen lain.' : e.message;
                 } finally {
@@ -323,8 +340,9 @@
                     if (m.type === 'delete-application') {
                         const res = await this.api('DELETE', this.endpoints.application(m.target.id));
 
+                        // JoinAgentController@deleteForm mengembalikan [pesan, jumlah_terhapus, 200]
                         if (Array.isArray(res) && res[1] === 0) {
-                            throw new Error('Tidak ada data yang terhapus. Periksa deleteForm di JoinAgentController.');
+                            throw new Error('Tidak ada data yang terhapus.');
                         }
 
                         this.applications = this.applications.filter(a => a.id !== m.target.id);

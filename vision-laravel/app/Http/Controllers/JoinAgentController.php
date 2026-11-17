@@ -54,8 +54,8 @@ class JoinAgentController{
 
     }
 
-    public function deleteForm(String $username){
-        $result = DB::table('join_agent')->where('username', $username)->delete();
+    public function deleteForm(String $nama){
+        $result = DB::table('join_agent')->where('nama', $nama)->delete();
         return response()->json([
             "Agent Form berhasil dihapus!",
             $result,
